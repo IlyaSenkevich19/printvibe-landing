@@ -2,6 +2,7 @@ import tshirt from "@/assets/work-tshirt.jpg";
 import hoodie from "@/assets/work-hoodie.jpg";
 import mug from "@/assets/work-mug.jpg";
 import stickers from "@/assets/work-stickers.jpg";
+import type { ProductId } from "@/lib/try-on";
 
 // Must match the production domain: canonical URLs, sitemap.xml, robots.txt and llms.txt rely on it.
 export const SITE_URL = "https://printvibe.by";
@@ -64,6 +65,7 @@ export type Service = {
   uses: string[];
   image?: string;
   imageAlt?: string;
+  tryOn?: ProductId;
 };
 
 export const services: Service[] = [
@@ -74,6 +76,7 @@ export const services: Service[] = [
     uses: ["подарок", "команда", "мерч", "мероприятие"],
     image: tshirt,
     imageAlt: "Чёрная футболка с цветным принтом на груди",
+    tryOn: "tshirt",
   },
   {
     id: "hoodies",
@@ -82,6 +85,7 @@ export const services: Service[] = [
     uses: ["спина", "грудь", "рукав"],
     image: hoodie,
     imageAlt: "Серое худи с принтом на спине",
+    tryOn: "hoodie",
   },
   {
     id: "mugs",
@@ -90,6 +94,7 @@ export const services: Service[] = [
     uses: ["фото", "надпись", "поздравление"],
     image: mug,
     imageAlt: "Белая кружка с напечатанной семейной фотографией",
+    tryOn: "mug",
   },
   {
     id: "stickers",
@@ -98,6 +103,7 @@ export const services: Service[] = [
     uses: ["упаковка", "бренд", "стикерпак"],
     image: stickers,
     imageAlt: "Набор цветных наклеек разной формы",
+    tryOn: "sticker",
   },
   {
     id: "photo",

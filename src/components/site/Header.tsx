@@ -6,8 +6,9 @@ import { PhoneIcon } from "./icons";
 
 const nav = [
   { href: "/#services", label: "Что печатаем" },
+  { href: "/#try", label: "Примерка" },
+  { href: "/#works", label: "Работы" },
   { href: "/#how", label: "Как заказать" },
-  { href: "/#faq", label: "Вопросы" },
   { href: "/#contacts", label: "Контакты" },
 ];
 
