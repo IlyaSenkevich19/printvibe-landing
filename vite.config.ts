@@ -4,7 +4,11 @@ import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
+const pages = process.env["GITHUB_PAGES"] === "true";
+const pagesBase = process.env["PAGES_BASE"] ?? "/printvibe-landing-page/";
+
 export default defineConfig(({ command }) => ({
+  base: pages ? pagesBase : "/",
   resolve: {
     tsconfigPaths: true,
     dedupe: [
@@ -31,8 +35,14 @@ export default defineConfig(({ command }) => ({
         },
       },
       server: { entry: "server" },
+      ...(pages
+        ? {
+            prerender: { enabled: true, crawlLinks: true },
+            pages: [{ path: "/" }, { path: "/privacy" }],
+          }
+        : {}),
     }),
-    ...(command === "build" ? [nitro({ defaultPreset: "cloudflare-module" })] : []),
+    ...(command === "build" && !pages ? [nitro({ preset: "node-server" })] : []),
     viteReact(),
   ],
 }));

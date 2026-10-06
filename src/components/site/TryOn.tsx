@@ -10,12 +10,13 @@ import { renderMockupPng } from "@/lib/mockup-export";
 import { shareOrder, type ShareResult } from "@/lib/share-order";
 import { onTryOnRequest, type ProductId } from "@/lib/try-on";
 import { CropMarks } from "./print-marks";
-import { products } from "./try-on/catalog";
+import { printNote, products, type PrintSide } from "./try-on/catalog";
 import { TryOnControls } from "./try-on/Controls";
 import { Mockup } from "./try-on/Mockup";
 
 export function TryOn() {
   const [productId, setProductId] = useState<ProductId>("tshirt");
+  const [side, setSide] = useState<PrintSide>("front");
   const [colorId, setColorId] = useState("white");
   const [design, setDesign] = useState<Design | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,14 +24,21 @@ export function TryOn() {
   const [shareStatus, setShareStatus] = useState<ShareResult | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [scale, setScale] = useState(80);
-  const [offset, setOffset] = useState(15);
+  const [nx, setNx] = useState(50);
+  const [ny, setNy] = useState(15);
   const [error, setError] = useState<string | null>(null);
 
   const product = products.find((item) => item.id === productId) ?? products[0]!;
   const color = product.colors.find((item) => item.id === colorId) ?? product.colors[0];
-  const caption = `${product.name}${color ? `, ${color.name.toLowerCase()}` : ""}`;
+  const placement = product.back ? (side === "back" ? "спина" : "грудь") : "";
+  const caption = `${product.name}${color ? `, ${color.name.toLowerCase()}` : ""}${placement ? `, ${placement}` : ""}`;
 
   useEffect(() => onTryOnRequest(setProductId), []);
+  useEffect(() => {
+    setSide("front");
+    setNx(50);
+    setNy(productId === "sticker" ? 50 : 15);
+  }, [productId]);
   useEffect(() => () => releaseDesign(design), [design]);
 
   useEffect(() => {
@@ -44,9 +52,13 @@ export function TryOn() {
         .then((png) => {
           if (!cancelled) {
             setMockup(
-              new File([png], `printvibe-${product.id}${color ? `-${color.id}` : ""}.png`, {
-                type: "image/png",
-              }),
+              new File(
+                [png],
+                `printvibe-${product.id}${product.back ? `-${side}` : ""}${color ? `-${color.id}` : ""}.png`,
+                {
+                  type: "image/png",
+                },
+              ),
             );
           }
         })
@@ -56,7 +68,7 @@ export function TryOn() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [design, product.id, color, caption, scale, offset]);
+  }, [design, product.id, product.back, side, color, caption, scale, nx, ny]);
 
   const acceptFile = async (file: File) => {
     setError(null);
@@ -99,8 +111,8 @@ export function TryOn() {
             </h2>
           </div>
           <p className="max-w-sm text-ink/70">
-            Загрузите логотип, рисунок или фото и примерьте на изделие. Файл никуда не отправляется
-            — превью строится прямо в браузере.
+            Загрузите логотип, рисунок или фото и примерьте на изделие — на груди или на спине. Файл
+            никуда не отправляется — превью строится прямо в браузере. Лучше прислать JPG или PNG.
           </p>
         </div>
 
@@ -112,14 +124,18 @@ export function TryOn() {
             onProduct={setProductId}
             color={color}
             onColor={setColorId}
+            side={side}
+            onSide={setSide}
             fileName={design?.name}
             busy={loading}
             error={error}
             onFile={(file) => void acceptFile(file)}
             scale={scale}
             onScale={setScale}
-            offset={offset}
-            onOffset={setOffset}
+            nx={nx}
+            onNx={setNx}
+            ny={ny}
+            onNy={setNy}
             canSend={design !== null}
             onSend={send}
             shareStatus={shareStatus}
@@ -135,17 +151,25 @@ export function TryOn() {
               <Mockup
                 svgRef={svgRef}
                 product={product}
+                side={product.back ? side : "front"}
                 color={color}
                 design={design?.preview?.url}
                 scale={scale / 100}
-                offset={offset / 100}
+                nx={nx / 100}
+                ny={ny / 100}
+                onMove={(x, y) => {
+                  setNx(Math.round(x * 100));
+                  setNy(Math.round(y * 100));
+                }}
               />
               <CropMarks className="m-6" />
               <p className="eyebrow absolute top-4 left-4 text-ink/60">
                 {product.name}
                 {color && ` · ${color.name.toLowerCase()}`}
               </p>
-              <p className="eyebrow absolute right-4 bottom-4 text-ink/60">{product.note}</p>
+              <p className="eyebrow absolute right-4 bottom-4 text-ink/60">
+                {printNote(product, product.back ? side : "front")}
+              </p>
               {design && !design.preview && (
                 <div className="absolute inset-x-6 bottom-14 border-2 border-ink bg-card p-4 text-sm shadow-[4px_4px_0_0_var(--orange)]">
                   <p className="font-semibold">

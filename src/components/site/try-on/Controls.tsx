@@ -4,7 +4,7 @@ import type { ProductId } from "@/lib/try-on";
 import type { ShareResult } from "@/lib/share-order";
 import { TelegramIcon } from "../icons";
 import { Uploader } from "../Uploader";
-import type { Fabric, Product } from "./catalog";
+import type { Fabric, PrintSide, Product } from "./catalog";
 
 export function TryOnControls({
   products,
@@ -13,14 +13,18 @@ export function TryOnControls({
   onProduct,
   color,
   onColor,
+  side,
+  onSide,
   fileName,
   busy,
   error,
   onFile,
   scale,
   onScale,
-  offset,
-  onOffset,
+  nx,
+  onNx,
+  ny,
+  onNy,
   canSend,
   onSend,
   shareStatus,
@@ -32,14 +36,18 @@ export function TryOnControls({
   onProduct: (id: ProductId) => void;
   color: Fabric | undefined;
   onColor: (id: string) => void;
+  side: PrintSide;
+  onSide: (side: PrintSide) => void;
   fileName: string | undefined;
   busy: boolean;
   error: string | null;
   onFile: (file: File) => void;
   scale: number;
   onScale: (value: number) => void;
-  offset: number;
-  onOffset: (value: number) => void;
+  nx: number;
+  onNx: (value: number) => void;
+  ny: number;
+  onNy: (value: number) => void;
   canSend: boolean;
   onSend: () => void;
   shareStatus: ShareResult | null;
@@ -93,6 +101,34 @@ export function TryOnControls({
         </Field>
       )}
 
+      {product.back && (
+        <Field legend="Сторона">
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ["front", "Грудь"],
+                ["back", "Спина"],
+              ] as const
+            ).map(([value, label]) => (
+              <label
+                key={value}
+                className="cursor-pointer border-2 border-ink bg-card px-3 py-3 text-center font-semibold transition-colors has-checked:bg-ink has-checked:text-paper has-focus-visible:outline-3 has-focus-visible:outline-violet"
+              >
+                <input
+                  type="radio"
+                  name="side"
+                  value={value}
+                  checked={side === value}
+                  onChange={() => onSide(value)}
+                  className="sr-only"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </Field>
+      )}
+
       <Field legend="Ваш дизайн">
         <Uploader busy={busy} fileName={fileName} onFile={onFile} />
         {error && (
@@ -104,10 +140,24 @@ export function TryOnControls({
 
       <div className="grid gap-6 sm:grid-cols-2">
         <Range label="Размер" value={scale} min={40} max={100} onChange={onScale} />
-        {product.id !== "sticker" && (
-          <Range label="Положение" value={offset} min={0} max={100} onChange={onOffset} />
-        )}
+        <Range
+          label="По горизонтали"
+          value={nx}
+          min={0}
+          max={100}
+          disabled={scale === 100}
+          onChange={onNx}
+        />
+        <Range
+          label="По вертикали"
+          value={ny}
+          min={0}
+          max={100}
+          disabled={scale === 100}
+          onChange={onNy}
+        />
       </div>
+      <p className="text-sm text-ink/60">Потяните принт на превью или подвиньте ползунки.</p>
 
       <div className="border-t border-ink/15 pt-6">
         {canSend ? (
@@ -175,12 +225,14 @@ function Range({
   value,
   min,
   max,
+  disabled = false,
   onChange,
 }: {
   label: string;
   value: number;
   min: number;
   max: number;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }) {
   const id = useId();
@@ -196,8 +248,9 @@ function Range({
         min={min}
         max={max}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-3 w-full accent-violet"
+        className="mt-3 w-full accent-violet disabled:opacity-40"
       />
     </div>
   );

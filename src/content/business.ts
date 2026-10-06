@@ -1,7 +1,4 @@
-import tshirt from "@/assets/work-tshirt.jpg";
-import hoodie from "@/assets/work-hoodie.jpg";
-import mug from "@/assets/work-mug.jpg";
-import stickers from "@/assets/work-stickers.jpg";
+import { workImages, type WorkImage } from "@/assets/work";
 import type { ProductId } from "@/lib/try-on";
 
 // Must match the production domain: canonical URLs, sitemap.xml, robots.txt and llms.txt rely on it.
@@ -63,7 +60,7 @@ export type Service = {
   title: string;
   text: string;
   uses: string[];
-  image?: string;
+  image?: WorkImage;
   imageAlt?: string;
   tryOn?: ProductId;
 };
@@ -74,7 +71,7 @@ export const services: Service[] = [
     title: "Футболки",
     text: "Печать на футболках с вашим дизайном: логотип, надпись, фотография или собственный рисунок.",
     uses: ["подарок", "команда", "мерч", "мероприятие"],
-    image: tshirt,
+    image: workImages.tshirt,
     imageAlt: "Чёрная футболка с цветным принтом на груди",
     tryOn: "tshirt",
   },
@@ -83,7 +80,7 @@ export const services: Service[] = [
     title: "Худи и свитшоты",
     text: "Принт на груди, спине или рукаве — для себя, для команды или в качестве фирменной одежды.",
     uses: ["спина", "грудь", "рукав"],
-    image: hoodie,
+    image: workImages.hoodie,
     imageAlt: "Серое худи с принтом на спине",
     tryOn: "hoodie",
   },
@@ -92,7 +89,7 @@ export const services: Service[] = [
     title: "Кружки",
     text: "Фото, надпись или поздравление на кружке. Подарок, который каждый день на столе.",
     uses: ["фото", "надпись", "поздравление"],
-    image: mug,
+    image: workImages.mug,
     imageAlt: "Белая кружка с напечатанной семейной фотографией",
     tryOn: "mug",
   },
@@ -101,7 +98,7 @@ export const services: Service[] = [
     title: "Наклейки",
     text: "Стикеры по вашему макету — для ноутбука, упаковки, товаров или фирменного стиля.",
     uses: ["упаковка", "бренд", "стикерпак"],
-    image: stickers,
+    image: workImages.stickers,
     imageAlt: "Набор цветных наклеек разной формы",
     tryOn: "sticker",
   },

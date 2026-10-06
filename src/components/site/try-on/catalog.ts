@@ -17,13 +17,24 @@ const mugColors: Fabric[] = [
 
 export type Area = { x: number; y: number; w: number; h: number };
 
+export type PrintSide = "front" | "back";
+
 export type Product = {
   id: ProductId;
   name: string;
   colors: Fabric[];
   area: Area;
   note: string;
+  back?: { area: Area; note: string };
 };
+
+export function printArea(product: Product, side: PrintSide): Area {
+  return side === "back" && product.back ? product.back.area : product.area;
+}
+
+export function printNote(product: Product, side: PrintSide): string {
+  return side === "back" && product.back ? product.back.note : product.note;
+}
 
 export const products: Product[] = [
   {
@@ -32,6 +43,7 @@ export const products: Product[] = [
     colors: fabrics,
     area: { x: 170, y: 128, w: 160, h: 200 },
     note: "Принт на груди",
+    back: { area: { x: 140, y: 118, w: 220, h: 250 }, note: "Принт на спине" },
   },
   {
     id: "hoodie",
@@ -39,6 +51,7 @@ export const products: Product[] = [
     colors: fabrics,
     area: { x: 178, y: 150, w: 144, h: 150 },
     note: "Принт на груди, над карманом",
+    back: { area: { x: 150, y: 125, w: 200, h: 230 }, note: "Принт на спине" },
   },
   {
     id: "mug",

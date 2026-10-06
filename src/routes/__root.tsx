@@ -11,6 +11,8 @@ import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 
+const publicFile = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -53,7 +55,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Попробовать снова
           </button>
-          <a href="/" className="btn btn-ghost">
+          <a href={import.meta.env.BASE_URL} className="btn btn-ghost">
             На главную
           </a>
         </div>
@@ -78,21 +80,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       {
         rel: "preload",
-        href: "/fonts/dela-gothic-one-cyrillic.woff2",
+        href: publicFile("/fonts/dela-gothic-one-cyrillic.woff2"),
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous",
       },
       {
         rel: "preload",
-        href: "/fonts/onest-cyrillic.woff2",
+        href: publicFile("/fonts/onest-cyrillic.woff2"),
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous",
       },
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "icon", href: publicFile("/favicon.png"), type: "image/png" },
+      { rel: "apple-touch-icon", href: publicFile("/favicon.png") },
     ],
   }),
   shellComponent: RootShell,

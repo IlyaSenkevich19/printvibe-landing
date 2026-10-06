@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-const FORMATS = "JPG, PNG, HEIC, SVG, PDF, AI, PSD, CDR";
+const HINT =
+  "Лучше JPG или PNG — превью откроется сразу. HEIC тоже примем, но файл тяжёлый и готовится дольше. Ещё: SVG, PDF, AI, PSD, CDR.";
 
 export function Uploader({
   busy = false,
@@ -37,8 +38,9 @@ export function Uploader({
         {busy ? "Открываем файл…" : fileName ? "Файл выбран" : "Загрузить макет"}
       </p>
       <p className={`text-sm text-ink/60 ${fileName ? "break-all" : "text-balance"}`}>
-        {fileName ? fileName : `перетащите файл на рамку или нажмите кнопку ниже · ${FORMATS}`}
+        {fileName ? fileName : "Перетащите файл на рамку или нажмите кнопку ниже"}
       </p>
+      {!fileName && <p className="max-w-md text-sm text-balance text-ink/60">{HINT}</p>}
       <input
         type="file"
         disabled={busy}

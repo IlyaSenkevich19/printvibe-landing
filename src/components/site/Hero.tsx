@@ -1,9 +1,8 @@
 import type { CSSProperties } from "react";
-import tshirt from "@/assets/work-tshirt.jpg";
-import mug from "@/assets/work-mug.jpg";
-import stickers from "@/assets/work-stickers.jpg";
+import { workImages } from "@/assets/work";
 import { business, hoursSummary } from "@/content/business";
 import { OpenStatus } from "./OpenStatus";
+import { WorkPhoto } from "./WorkPhoto";
 import { ArrowIcon, TelegramIcon } from "./icons";
 import { ColorBar, CropMarks, Stamp } from "./print-marks";
 
@@ -103,12 +102,11 @@ function HeroSheets() {
           className="print-in absolute top-0 left-[6%] w-[64%] rotate-[-4deg] bg-card p-2.5 pb-9 shadow-[0_30px_60px_-30px_rgb(30_20_50/0.45)]"
           style={{ "--d": "250ms" } as CSSProperties}
         >
-          <img
-            src={tshirt}
+          <WorkPhoto
+            image={workImages.tshirt}
             alt=""
-            width={816}
-            height={816}
-            fetchPriority="high"
+            sizes="(min-width: 1024px) 360px, 64vw"
+            priority
             className="aspect-square w-full object-cover"
           />
           <figcaption className="eyebrow absolute bottom-2.5 left-3 text-[0.65rem] text-ink/60">
@@ -120,11 +118,11 @@ function HeroSheets() {
           className="print-in absolute top-[30%] right-0 w-[52%] rotate-[5deg] bg-card p-2.5 pb-9 shadow-[0_30px_60px_-30px_rgb(30_20_50/0.45)]"
           style={{ "--d": "650ms" } as CSSProperties}
         >
-          <img
-            src={mug}
+          <WorkPhoto
+            image={workImages.mug}
             alt=""
-            width={816}
-            height={816}
+            sizes="(min-width: 1024px) 300px, 52vw"
+            loading="eager"
             className="aspect-square w-full object-cover"
           />
           <figcaption className="eyebrow absolute bottom-2.5 left-3 text-[0.65rem] text-ink/60">
@@ -136,11 +134,11 @@ function HeroSheets() {
           className="print-in absolute bottom-0 left-0 w-[44%] rotate-[-9deg] rounded-[1.4rem] bg-white p-2 shadow-[0_20px_40px_-20px_rgb(30_20_50/0.5)]"
           style={{ "--d": "1000ms" } as CSSProperties}
         >
-          <img
-            src={stickers}
+          <WorkPhoto
+            image={workImages.stickers}
             alt=""
-            width={816}
-            height={816}
+            sizes="(min-width: 1024px) 240px, 44vw"
+            loading="eager"
             className="aspect-square w-full rounded-[1rem] object-cover"
           />
         </figure>

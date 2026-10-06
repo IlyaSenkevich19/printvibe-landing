@@ -1,5 +1,6 @@
 import { services, type Service } from "@/content/business";
 import { requestTryOn } from "@/lib/try-on";
+import { WorkPhoto } from "./WorkPhoto";
 import { ArrowIcon } from "./icons";
 
 const layout: Record<string, string> = {
@@ -83,17 +84,20 @@ function ImageCard({ service, index }: { service: Service; index: number }) {
       <div
         className={`relative overflow-hidden border-b-2 border-ink ${big ? "lg:min-h-0 lg:flex-1" : ""}`}
       >
-        <img
-          src={service.image}
-          alt={service.imageAlt}
-          width={816}
-          height={816}
-          loading="lazy"
-          decoding="async"
-          className={`w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-105 ${
-            big ? "aspect-[4/3] lg:absolute lg:inset-0 lg:aspect-auto lg:h-full" : "aspect-[4/3]"
-          }`}
-        />
+        {service.image && (
+          <WorkPhoto
+            image={service.image}
+            alt={service.imageAlt ?? ""}
+            sizes={
+              big
+                ? "(min-width: 1024px) 640px, (min-width: 640px) 50vw, 100vw"
+                : "(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
+            }
+            className={`w-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-105 ${
+              big ? "aspect-[4/3] lg:absolute lg:inset-0 lg:aspect-auto lg:h-full" : "aspect-[4/3]"
+            }`}
+          />
+        )}
       </div>
       <CardBody service={service} index={index} grow={!big} />
     </article>

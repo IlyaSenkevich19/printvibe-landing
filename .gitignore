@@ -16,7 +16,7 @@ dist-ssr
 .nitro
 *.local
 
-# Wrangler / Cloudflare
+# Old deploy artifacts
 .wrangler/
 .dev.vars
 

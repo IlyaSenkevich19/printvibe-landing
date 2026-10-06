@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { business } from "@/content/business";
 import { cases, categories, type CategoryId } from "@/content/cases";
+import { WorkPhoto } from "./WorkPhoto";
 import { ArrowIcon, InstagramIcon, PlusIcon } from "./icons";
 
 type Filter = CategoryId | "all";
@@ -67,11 +68,10 @@ export function Cases() {
                     className="group relative block w-full overflow-hidden border-2 border-ink bg-card text-left"
                     aria-label={`Открыть: ${item.caption}`}
                   >
-                    <img
-                      src={item.src}
+                    <WorkPhoto
+                      image={item}
                       alt={item.caption}
-                      loading="lazy"
-                      decoding="async"
+                      sizes="(min-width: 1024px) 240px, (min-width: 768px) 30vw, 45vw"
                       className="block w-full transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-105"
                     />
                     <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-ink/85 px-3 py-2 text-sm font-medium text-paper opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -172,7 +172,13 @@ function Lightbox({
       className="m-auto max-h-[92vh] w-[min(92vw,60rem)] bg-transparent p-0 backdrop:bg-ink/85 backdrop:backdrop-blur-sm"
     >
       <figure className="border-2 border-ink bg-card">
-        <img src={item.src} alt={item.caption} className="max-h-[75vh] w-full object-contain" />
+        <WorkPhoto
+          image={item}
+          alt={item.caption}
+          sizes="(max-width: 960px) 92vw, 960px"
+          priority
+          className="max-h-[75vh] w-full object-contain"
+        />
         <figcaption className="flex items-center justify-between gap-4 border-t-2 border-ink px-4 py-3">
           <span className="font-semibold">{item.caption}</span>
           <span className="flex items-center gap-2">

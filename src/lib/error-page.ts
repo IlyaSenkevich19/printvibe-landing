@@ -22,7 +22,7 @@ export function renderErrorPage(): string {
       <p>Что-то пошло не так. Попробуйте обновить страницу или вернуться на главную.</p>
       <div class="actions">
         <button class="primary" onclick="location.reload()">Попробовать снова</button>
-        <a class="secondary" href="/">На главную</a>
+        <a class="secondary" href="${import.meta.env.BASE_URL}">На главную</a>
       </div>
     </div>
   </body>

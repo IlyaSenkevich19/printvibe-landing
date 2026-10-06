@@ -1,7 +1,4 @@
-import tshirt from "@/assets/work-tshirt.jpg";
-import hoodie from "@/assets/work-hoodie.jpg";
-import mug from "@/assets/work-mug.jpg";
-import stickers from "@/assets/work-stickers.jpg";
+import { workImages } from "@/assets/work";
 
 export const categories = [
   { id: "tshirt", label: "Футболки" },
@@ -16,6 +13,9 @@ export type CategoryId = (typeof categories)[number]["id"];
 
 export type Case = {
   src: string;
+  srcSet?: string;
+  width?: number;
+  height?: number;
   category: CategoryId;
   caption: string;
   demo?: boolean;
@@ -49,10 +49,10 @@ const realCases: Case[] = Object.entries(files)
   });
 
 const demoCases: Case[] = [
-  { src: tshirt, category: "tshirt", caption: "Демо: футболка", demo: true },
-  { src: mug, category: "mug", caption: "Демо: кружка", demo: true },
-  { src: stickers, category: "sticker", caption: "Демо: наклейки", demo: true },
-  { src: hoodie, category: "hoodie", caption: "Демо: худи", demo: true },
+  { ...workImages.tshirt, category: "tshirt", caption: "Демо: футболка", demo: true },
+  { ...workImages.mug, category: "mug", caption: "Демо: кружка", demo: true },
+  { ...workImages.stickers, category: "sticker", caption: "Демо: наклейки", demo: true },
+  { ...workImages.hoodie, category: "hoodie", caption: "Демо: худи", demo: true },
 ];
 
 // Demo pictures are illustrations, not real orders: they must never ship to production.
