@@ -1,4 +1,14 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  DESIGN_ACCEPT,
+  DesignError,
+  fileLabel,
+  prepareDesign,
+  releaseDesign,
+  type Design,
+} from "@/lib/design-file";
+import { renderMockupPng } from "@/lib/mockup-export";
+import { shareOrder, type ShareResult } from "@/lib/share-order";
 import { business } from "@/content/business";
 import { onTryOnRequest, type ProductId } from "@/lib/try-on";
 import { TelegramIcon } from "./icons";
@@ -60,12 +70,14 @@ const products: Product[] = [
   },
 ];
 
-const MAX_FILE_MB = 20;
-
 export function TryOn() {
   const [productId, setProductId] = useState<ProductId>("tshirt");
   const [colorId, setColorId] = useState("white");
-  const [design, setDesign] = useState<{ url: string; name: string } | null>(null);
+  const [design, setDesign] = useState<Design | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [mockup, setMockup] = useState<File | null>(null);
+  const [shareStatus, setShareStatus] = useState<ShareResult | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const [scale, setScale] = useState(80);
   const [offset, setOffset] = useState(15);
   const [dragging, setDragging] = useState(false);
@@ -77,25 +89,65 @@ export function TryOn() {
 
   useEffect(() => onTryOnRequest(setProductId), []);
 
-  useEffect(
-    () => () => {
-      if (design) URL.revokeObjectURL(design.url);
-    },
-    [design],
-  );
+  useEffect(() => () => releaseDesign(design), [design]);
 
-  const acceptFile = (file: File | undefined) => {
+  const caption = `${product.name}${color ? `, ${color.name.toLowerCase()}` : ""}`;
+
+  // Pre-rendered so the share sheet can open synchronously inside the click handler.
+  useEffect(() => {
+    setMockup(null);
+    const svg = svgRef.current;
+    const preview = design?.preview;
+    if (!svg || !preview) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      renderMockupPng(svg, preview.blob, caption)
+        .then((png) => {
+          if (!cancelled)
+            setMockup(
+              new File([png], `printvibe-${product.id}${color ? `-${color.id}` : ""}.png`, {
+                type: "image/png",
+              }),
+            );
+        })
+        .catch(() => {});
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [design, product.id, color, caption, scale, offset]);
+
+  const acceptFile = async (file: File | undefined) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Нужна картинка: PNG, JPG, WEBP или SVG.");
-      return;
-    }
-    if (file.size > MAX_FILE_MB * 1024 * 1024) {
-      setError(`Файл больше ${MAX_FILE_MB} МБ — пришлите его нам в Telegram, проверим вручную.`);
-      return;
-    }
     setError(null);
-    setDesign({ url: URL.createObjectURL(file), name: file.name });
+    setShareStatus(null);
+    setLoading(true);
+    try {
+      setDesign(await prepareDesign(file));
+    } catch (e) {
+      setError(
+        e instanceof DesignError ? e.message : "Не получилось открыть файл. Попробуйте другой.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const orderText = design
+    ? [
+        "Здравствуйте! Хочу заказать печать в PrintVibe.",
+        `Изделие: ${caption}.`,
+        `Мой макет: ${design.name}${mockup ? ", превью на изделии — во вложении" : ""}.`,
+      ].join("\n")
+    : "";
+
+  const send = () => {
+    if (!design) return;
+    const files = mockup ? [mockup, design.file] : [design.file];
+    shareOrder({ files, text: orderText, ...(mockup && { download: mockup }) }).then(
+      setShareStatus,
+    );
   };
 
   return (
@@ -178,7 +230,7 @@ export function TryOn() {
                 onDrop={(e) => {
                   e.preventDefault();
                   setDragging(false);
-                  acceptFile(e.dataTransfer.files[0]);
+                  void acceptFile(e.dataTransfer.files[0]);
                 }}
                 className={`flex w-full flex-col items-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-colors ${
                   dragging
@@ -187,23 +239,23 @@ export function TryOn() {
                 }`}
               >
                 <span className="font-semibold">
-                  {design ? "Заменить файл" : "Загрузить картинку"}
+                  {loading ? "Открываем файл…" : design ? "Заменить файл" : "Загрузить макет"}
                 </span>
-                <span className="text-sm text-ink/60">
+                <span className="text-sm break-all text-ink/60">
                   {design
                     ? design.name
-                    : "или перетащите сюда · PNG с прозрачным фоном — лучше всего"}
+                    : "или перетащите сюда · JPG, PNG, HEIC, SVG, PDF, AI, PSD, CDR"}
                 </span>
               </button>
               <input
                 ref={inputRef}
                 type="file"
-                accept="image/*"
+                accept={DESIGN_ACCEPT}
                 className="sr-only"
                 tabIndex={-1}
                 aria-hidden
                 onChange={(e) => {
-                  acceptFile(e.target.files?.[0]);
+                  void acceptFile(e.target.files?.[0]);
                   e.target.value = "";
                 }}
               />
@@ -222,15 +274,28 @@ export function TryOn() {
             </div>
 
             <div className="border-t border-ink/15 pt-6">
-              <a
-                href={business.telegram.url}
-                target="_blank"
-                rel="noopener"
-                className="btn btn-primary w-full sm:w-auto"
-              >
-                <TelegramIcon />
-                Отправить макет в Telegram
-              </a>
+              {design ? (
+                <button
+                  type="button"
+                  onClick={send}
+                  disabled={loading}
+                  className="btn btn-primary w-full disabled:opacity-60 sm:w-auto"
+                >
+                  <TelegramIcon />
+                  Отправить макет в Telegram
+                </button>
+              ) : (
+                <a
+                  href={business.telegram.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="btn btn-primary w-full sm:w-auto"
+                >
+                  <TelegramIcon />
+                  Написать в Telegram
+                </a>
+              )}
+              <ShareStatus status={shareStatus} fileName={design?.name} withPreview={!!mockup} />
               <p className="mt-4 text-sm text-ink/60">
                 Визуализация примерная: точный размер, место и цвета согласуем перед печатью.
               </p>
@@ -244,9 +309,10 @@ export function TryOn() {
                 className="halftone absolute inset-0 text-ink/10 [mask-image:radial-gradient(circle,transparent_35%,black)]"
               />
               <Mockup
+                svgRef={svgRef}
                 product={product}
                 color={color}
-                design={design?.url}
+                design={design?.preview?.url}
                 scale={scale / 100}
                 offset={offset / 100}
               />
@@ -256,11 +322,42 @@ export function TryOn() {
                 {color && ` · ${color.name.toLowerCase()}`}
               </p>
               <p className="eyebrow absolute right-4 bottom-4 text-ink/60">{product.note}</p>
+              {design && !design.preview && (
+                <div className="absolute inset-x-6 bottom-14 border-2 border-ink bg-card p-4 text-sm shadow-[4px_4px_0_0_var(--orange)]">
+                  <p className="font-semibold">
+                    Файл {fileLabel(design.name)} принят — превью для этого формата недоступно.
+                  </p>
+                  <p className="mt-1 text-ink/70">
+                    Отправьте его нам — покажем, как макет ляжет на изделие.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function ShareStatus({
+  status,
+  fileName,
+  withPreview,
+}: {
+  status: ShareResult | null;
+  fileName: string | undefined;
+  withPreview: boolean;
+}) {
+  if (status !== "fallback") return null;
+  const file = fileName ? `ваш файл «${fileName}»` : "ваш файл";
+  return (
+    <p role="status" className="mt-4 border-l-4 border-violet bg-card px-4 py-3 text-sm">
+      Открыли чат в Telegram и скопировали текст заказа.{" "}
+      {withPreview
+        ? `Превью на изделии скачалось — прикрепите его и ${file} к сообщению и вставьте текст.`
+        : `Прикрепите ${file} к сообщению и вставьте текст.`}
+    </p>
   );
 }
 
@@ -420,12 +517,14 @@ const shapes = {
 };
 
 function Mockup({
+  svgRef,
   product,
   color,
   design,
   scale,
   offset,
 }: {
+  svgRef: RefObject<SVGSVGElement | null>;
   product: Product;
   color: Fabric | undefined;
   design: string | undefined;
@@ -446,6 +545,7 @@ function Mockup({
 
   return (
     <svg
+      ref={svgRef}
       viewBox="0 0 500 500"
       role="img"
       aria-label={label}
@@ -461,8 +561,15 @@ function Mockup({
           />
           <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0" />
         </filter>
-        <filter id={`${uid}-blur`}>
-          <feGaussianBlur stdDeviation="9" />
+        <filter
+          id={`${uid}-blur`}
+          filterUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="500"
+          height="500"
+        >
+          <feGaussianBlur stdDeviation="10" />
         </filter>
         <filter id={`${uid}-diecut`} x="-20%" y="-20%" width="140%" height="140%">
           <feMorphology in="SourceAlpha" operator="dilate" radius="9" result="spread" />
