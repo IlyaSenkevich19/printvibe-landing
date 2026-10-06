@@ -82,7 +82,6 @@ export function TryOn() {
   const [offset, setOffset] = useState(15);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const product = products.find((p) => p.id === productId) ?? products[0]!;
   const color = product.colors.find((c) => c.id === colorId) ?? product.colors[0];
@@ -219,9 +218,7 @@ export function TryOn() {
             )}
 
             <Field legend="Ваш дизайн">
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
+              <label
                 onDragOver={(e) => {
                   e.preventDefault();
                   setDragging(true);
@@ -232,33 +229,30 @@ export function TryOn() {
                   setDragging(false);
                   void acceptFile(e.dataTransfer.files[0]);
                 }}
-                className={`flex w-full flex-col items-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-colors ${
+                className={`flex w-full cursor-pointer flex-col items-center gap-1 border-2 border-dashed px-4 py-6 text-center transition-colors has-focus-visible:outline-3 has-focus-visible:outline-violet ${
                   dragging
                     ? "border-violet bg-violet-soft"
                     : "border-ink/40 bg-card hover:border-ink"
                 }`}
               >
+                <input
+                  type="file"
+                  accept={DESIGN_ACCEPT}
+                  className="sr-only"
+                  onChange={(e) => {
+                    void acceptFile(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
                 <span className="font-semibold">
                   {loading ? "Открываем файл…" : design ? "Заменить файл" : "Загрузить макет"}
                 </span>
                 <span className="text-sm break-all text-ink/60">
                   {design
                     ? design.name
-                    : "или перетащите сюда · JPG, PNG, HEIC, SVG, PDF, AI, PSD, CDR"}
+                    : "нажмите или перетащите сюда · JPG, PNG, HEIC, SVG, PDF, AI, PSD, CDR"}
                 </span>
-              </button>
-              <input
-                ref={inputRef}
-                type="file"
-                accept={DESIGN_ACCEPT}
-                className="sr-only"
-                tabIndex={-1}
-                aria-hidden
-                onChange={(e) => {
-                  void acceptFile(e.target.files?.[0]);
-                  e.target.value = "";
-                }}
-              />
+              </label>
               {error && (
                 <p role="alert" className="mt-2 text-sm font-medium text-destructive">
                   {error}
