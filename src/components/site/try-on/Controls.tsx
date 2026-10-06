@@ -1,7 +1,7 @@
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { business } from "@/content/business";
 import type { ProductId } from "@/lib/try-on";
-import type { ShareResult } from "@/lib/share-order";
+import { browserCanShareFiles, type ShareResult } from "@/lib/share-order";
 import { TelegramIcon } from "../icons";
 import { Uploader } from "../Uploader";
 import type { Fabric, PrintSide, Product } from "./catalog";
@@ -16,15 +16,21 @@ export function TryOnControls({
   side,
   onSide,
   fileName,
+  fileSize,
+  previewUrl,
   busy,
   error,
   onFile,
-  scale,
-  onScale,
-  nx,
-  onNx,
-  ny,
-  onNy,
+  onClear,
+  x,
+  y,
+  w,
+  h,
+  onX,
+  onY,
+  onWidth,
+  onHeight,
+  canPlace,
   canSend,
   onSend,
   shareStatus,
@@ -39,20 +45,31 @@ export function TryOnControls({
   side: PrintSide;
   onSide: (side: PrintSide) => void;
   fileName: string | undefined;
+  fileSize: number | undefined;
+  previewUrl: string | undefined;
   busy: boolean;
   error: string | null;
   onFile: (file: File) => void;
-  scale: number;
-  onScale: (value: number) => void;
-  nx: number;
-  onNx: (value: number) => void;
-  ny: number;
-  onNy: (value: number) => void;
+  onClear: () => void;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  onX: (value: number) => void;
+  onY: (value: number) => void;
+  onWidth: (value: number) => void;
+  onHeight: (value: number) => void;
+  canPlace: boolean;
   canSend: boolean;
   onSend: () => void;
   shareStatus: ShareResult | null;
   withPreview: boolean;
 }) {
+  const [sharesFiles, setSharesFiles] = useState<boolean | null>(null);
+  useEffect(() => {
+    setSharesFiles(browserCanShareFiles());
+  }, []);
+
   return (
     <div className="order-2 space-y-8 lg:order-1">
       <Field legend="Изделие">
@@ -130,7 +147,14 @@ export function TryOnControls({
       )}
 
       <Field legend="Ваш дизайн">
-        <Uploader busy={busy} fileName={fileName} onFile={onFile} />
+        <Uploader
+          busy={busy}
+          fileName={fileName}
+          fileSize={fileSize}
+          previewUrl={previewUrl}
+          onFile={onFile}
+          onClear={onClear}
+        />
         {error && (
           <p role="alert" className="mt-2 text-sm font-medium text-destructive">
             {error}
@@ -138,26 +162,35 @@ export function TryOnControls({
         )}
       </Field>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Range label="Размер" value={scale} min={40} max={100} onChange={onScale} />
-        <Range
-          label="По горизонтали"
-          value={nx}
-          min={0}
-          max={100}
-          disabled={scale === 100}
-          onChange={onNx}
-        />
-        <Range
-          label="По вертикали"
-          value={ny}
-          min={0}
-          max={100}
-          disabled={scale === 100}
-          onChange={onNy}
-        />
-      </div>
-      <p className="text-sm text-ink/60">Потяните принт на превью или подвиньте ползунки.</p>
+      {canPlace && (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Range label="Ширина" value={w} min={20} max={100} onChange={onWidth} />
+            <Range label="Высота" value={h} min={20} max={100} onChange={onHeight} />
+            <Range
+              label="Слева"
+              value={x}
+              min={0}
+              max={Math.max(0, 100 - w)}
+              disabled={w === 100}
+              onChange={onX}
+            />
+            <Range
+              label="Сверху"
+              value={y}
+              min={0}
+              max={Math.max(0, 100 - h)}
+              disabled={h === 100}
+              onChange={onY}
+            />
+          </div>
+          <p className="text-sm text-ink/60">
+            {w === 100 && h === 100
+              ? "Принт на всю зону. Потяните уголок внутрь, чтобы уменьшить."
+              : "Потяните принт, чтобы сдвинуть. Уголок меняет ширину и высоту, противоположный остаётся на месте."}
+          </p>
+        </>
+      )}
 
       <div className="border-t border-ink/15 pt-6">
         {canSend ? (
@@ -168,7 +201,7 @@ export function TryOnControls({
             className="btn btn-primary w-full disabled:opacity-60 sm:w-auto"
           >
             <TelegramIcon />
-            Отправить макет в Telegram
+            {sharesFiles ? "Отправить макет в Telegram" : "Открыть Telegram с заказом"}
           </button>
         ) : (
           <a
@@ -182,6 +215,12 @@ export function TryOnControls({
           </a>
         )}
         <ShareStatus status={shareStatus} fileName={fileName} withPreview={withPreview} />
+        {canSend && sharesFiles === false && shareStatus !== "fallback" && (
+          <p className="mt-4 text-sm text-ink/60">
+            Браузер скачает превью и откроет чат. Файл и превью нужно прикрепить к сообщению
+            вручную.
+          </p>
+        )}
         <p className="mt-4 text-sm text-ink/60">
           Визуализация примерная: точный размер, место и цвета согласуем перед печатью.
         </p>
@@ -250,7 +289,7 @@ function Range({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-3 w-full accent-violet disabled:opacity-40"
+        className="mt-1 h-11 w-full cursor-pointer accent-violet disabled:cursor-default disabled:opacity-40"
       />
     </div>
   );

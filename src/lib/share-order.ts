@@ -6,6 +6,18 @@ export function canShareFiles(files: File[]) {
   return typeof navigator !== "undefined" && !!navigator.canShare?.({ files });
 }
 
+/** True when this browser can hand image files to the system share sheet. */
+export function browserCanShareFiles() {
+  if (typeof navigator === "undefined" || typeof navigator.canShare !== "function") return false;
+  try {
+    return navigator.canShare({
+      files: [new File(["."], "preview.png", { type: "image/png" })],
+    });
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Must be called synchronously from a click handler: Safari rejects navigator.share()
  * and browsers block window.open() once the user gesture has expired.

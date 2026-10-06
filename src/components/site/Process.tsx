@@ -37,7 +37,7 @@ export function Process() {
         <div className="mt-14">
           <a href={business.telegram.url} target="_blank" rel="noopener" className="btn btn-orange">
             <TelegramIcon />
-            Начать с шага 01
+            Написать в Telegram
           </a>
         </div>
       </div>

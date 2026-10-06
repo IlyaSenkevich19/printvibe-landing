@@ -47,7 +47,7 @@ function Privacy() {
         <Link to="/" className="eyebrow text-violet hover:underline">
           ← На главную
         </Link>
-        <h1 className="mt-6 font-display text-4xl leading-none md:text-6xl">
+        <h1 className="mt-6 font-display text-[clamp(1.15rem,6.3vw,3.25rem)] leading-[0.95]">
           Политика конфиденциальности
         </h1>
         <p className="mt-6 text-ink/60">Редакция от {revision}</p>
@@ -68,7 +68,7 @@ function Privacy() {
           <p>
             Изображения, которые вы загружаете в «Примерочную», обрабатываются только в вашем
             браузере и не передаются на сервер. Файл и превью попадают к нам, только если вы сами
-            отправите их через Telegram или другое приложение кнопкой «Отправить макет».
+            отправите их через Telegram или другое приложение.
           </p>
           <p>
             Когда вы обращаетесь к нам по телефону, в Telegram или Instagram, мы обрабатываем

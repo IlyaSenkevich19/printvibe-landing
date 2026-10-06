@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { business } from "@/content/business";
 import { Logo } from "./Logo";
-import { OpenStatus } from "./OpenStatus";
-import { PhoneIcon } from "./icons";
+import { PhoneIcon, TelegramIcon } from "./icons";
 
 const nav = [
   { href: "/#services", label: "Что печатаем" },
@@ -27,12 +26,12 @@ export function Header() {
         </Link>
 
         <nav aria-label="Основная навигация" className="hidden lg:block">
-          <ul className="flex items-center gap-8 text-[0.95rem] font-medium">
+          <ul className="flex items-center gap-5 text-[0.95rem] font-medium xl:gap-8">
             {nav.map((item) => (
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="relative py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:bg-violet after:transition-transform after:duration-300 hover:after:scale-x-100"
+                  className="relative whitespace-nowrap py-2 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:bg-violet after:transition-transform after:duration-300 hover:after:scale-x-100"
                 >
                   {item.label}
                 </a>
@@ -41,16 +40,24 @@ export function Header() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-5">
-          <span className="hidden xl:block">
-            <OpenStatus className="text-ink/70" />
-          </span>
+        <div className="flex shrink-0 items-center gap-4 xl:gap-5">
           <a
             href={business.phone.href}
             className="hidden items-center gap-2 font-semibold whitespace-nowrap md:inline-flex"
           >
             <PhoneIcon className="size-4" />
             {business.phone.display}
+          </a>
+          <a
+            href={business.telegram.url}
+            target="_blank"
+            rel="noopener"
+            aria-label="Написать в Telegram"
+            className="btn btn-primary btn-compact hidden whitespace-nowrap md:inline-flex"
+          >
+            <TelegramIcon />
+            <span className="lg:hidden xl:inline">Написать в Telegram</span>
+            <span className="hidden lg:inline xl:hidden">Telegram</span>
           </a>
           <a
             href={business.phone.href}

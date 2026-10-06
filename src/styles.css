@@ -183,6 +183,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
   }
 
   ::selection {
@@ -274,6 +275,57 @@
     background: var(--orange);
     color: var(--ink);
     --btn-shadow: var(--ink);
+  }
+  .btn-compact {
+    min-height: 2.75rem;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.95rem;
+    box-shadow: 3px 3px 0 0 var(--btn-shadow, var(--orange));
+  }
+  .btn-compact:hover {
+    box-shadow: 5px 5px 0 0 var(--btn-shadow, var(--orange));
+  }
+
+  /* Native file button stays in the document flow. Only its own button is painted. */
+  .design-file {
+    display: block;
+    width: 12.5rem;
+    max-width: 100%;
+    color: transparent;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .design-file::-webkit-file-upload-button,
+  .design-file::file-selector-button {
+    margin: 0;
+    border: 2px solid var(--ink);
+    background: var(--violet);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.7rem 1.15rem;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 0 var(--orange);
+    transition:
+      transform 180ms var(--ease-out-expo),
+      box-shadow 180ms var(--ease-out-expo);
+  }
+  .design-file:hover::-webkit-file-upload-button,
+  .design-file:hover::file-selector-button {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 0 var(--orange);
+  }
+  .design-file:active::-webkit-file-upload-button,
+  .design-file:active::file-selector-button {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 0 var(--orange);
+  }
+  .design-file:disabled::-webkit-file-upload-button,
+  .design-file:disabled::file-selector-button {
+    cursor: wait;
+    opacity: 0.6;
   }
 
   .eyebrow {

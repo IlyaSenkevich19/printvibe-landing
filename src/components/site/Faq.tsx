@@ -1,4 +1,4 @@
-import { faq } from "@/content/business";
+import { business, faq } from "@/content/business";
 import { PlusIcon } from "./icons";
 
 export function Faq() {
@@ -11,7 +11,23 @@ export function Faq() {
             Частые вопросы
           </h2>
           <p className="mt-6 max-w-sm text-ink/70">
-            Не нашли ответ? Напишите нам в Telegram или позвоните.
+            Не нашли ответ? Напишите нам в{" "}
+            <a
+              href={business.telegram.url}
+              target="_blank"
+              rel="noopener"
+              className="font-semibold text-violet underline-offset-4 hover:underline"
+            >
+              Telegram
+            </a>{" "}
+            или{" "}
+            <a
+              href={business.phone.href}
+              className="font-semibold text-violet underline-offset-4 hover:underline"
+            >
+              позвоните
+            </a>
+            .
           </p>
         </div>
 

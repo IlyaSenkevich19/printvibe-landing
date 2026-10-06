@@ -6,7 +6,7 @@ export function Footer() {
   const { legal } = business;
 
   return (
-    <footer className="bg-ink pt-16 pb-28 text-paper/80 md:pb-12">
+    <footer className="bg-ink pt-16 pb-[calc(7rem+env(safe-area-inset-bottom))] text-paper/80 md:pb-12">
       <div className="mx-auto max-w-7xl px-5">
         <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
           <div>

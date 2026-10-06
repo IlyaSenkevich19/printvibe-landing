@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useId,
   useRef,
   useState,
@@ -15,13 +16,92 @@ import {
   type Product,
 } from "./catalog";
 
-function placeDesign(area: Area, scale: number, nx: number, ny: number) {
-  const w = area.w * scale;
-  const h = area.h * scale;
-  return { x: area.x + (area.w - w) * nx, y: area.y + (area.h - h) * ny, w, h };
+function placeBox(area: Area, x: number, y: number, w: number, h: number): Area {
+  return {
+    x: area.x + area.w * x,
+    y: area.y + area.h * y,
+    w: area.w * w,
+    h: area.h * h,
+  };
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const MIN_FRACTION = 0.2;
+
+type Corner = "nw" | "ne" | "sw" | "se";
+
+type Gesture =
+  | { kind: "move"; id: number; sx: number; sy: number; x: number; y: number; w: number; h: number }
+  | { kind: "resize"; id: number; corner: Corner; opposite: { x: number; y: number } };
+
+function oppositeCorner(corner: Corner, box: Area) {
+  if (corner === "nw") return { x: box.x + box.w, y: box.y + box.h };
+  if (corner === "ne") return { x: box.x, y: box.y + box.h };
+  if (corner === "sw") return { x: box.x + box.w, y: box.y };
+  return { x: box.x, y: box.y };
+}
+
+function clientToUser(svg: SVGSVGElement, clientX: number, clientY: number, rotate: boolean) {
+  const rect = svg.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return null;
+  let x = ((clientX - rect.left) / rect.width) * 500;
+  let y = ((clientY - rect.top) / rect.height) * 500;
+  if (rotate) {
+    const cos = Math.cos((-6 * Math.PI) / 180);
+    const sin = Math.sin((-6 * Math.PI) / 180);
+    const dx = x - 250;
+    const dy = y - 250;
+    x = 250 + dx * cos - dy * sin;
+    y = 250 + dx * sin + dy * cos;
+  }
+  return { x, y };
+}
+
+function resizeBox(
+  corner: Corner,
+  opposite: { x: number; y: number },
+  pointer: { x: number; y: number },
+  area: Area,
+) {
+  const minW = area.w * MIN_FRACTION;
+  const minH = area.h * MIN_FRACTION;
+  const rightEdge = area.x + area.w;
+  const bottomEdge = area.y + area.h;
+  let left = area.x;
+  let right = rightEdge;
+  let top = area.y;
+  let bottom = bottomEdge;
+
+  if (corner === "se") {
+    left = opposite.x;
+    top = opposite.y;
+    right = clamp(pointer.x, left + minW, rightEdge);
+    bottom = clamp(pointer.y, top + minH, bottomEdge);
+  } else if (corner === "nw") {
+    right = opposite.x;
+    bottom = opposite.y;
+    left = clamp(pointer.x, area.x, right - minW);
+    top = clamp(pointer.y, area.y, bottom - minH);
+  } else if (corner === "ne") {
+    left = opposite.x;
+    bottom = opposite.y;
+    right = clamp(pointer.x, left + minW, rightEdge);
+    top = clamp(pointer.y, area.y, bottom - minH);
+  } else {
+    right = opposite.x;
+    top = opposite.y;
+    left = clamp(pointer.x, area.x, right - minW);
+    bottom = clamp(pointer.y, top + minH, bottomEdge);
+  }
+
+  return {
+    x: (left - area.x) / area.w,
+    y: (top - area.y) / area.h,
+    w: (right - left) / area.w,
+    h: (bottom - top) / area.h,
+  };
+}
 
 function Print({
   url,
@@ -30,8 +110,6 @@ function Print({
   canDrag,
   grabbing,
   onPointerDown,
-  onPointerMove,
-  onPointerUp,
 }: {
   url: string | undefined;
   box: Area;
@@ -39,8 +117,6 @@ function Print({
   canDrag: boolean;
   grabbing: boolean;
   onPointerDown: (event: ReactPointerEvent<SVGGElement>) => void;
-  onPointerMove: (event: ReactPointerEvent<SVGGElement>) => void;
-  onPointerUp: () => void;
 }) {
   return (
     <g
@@ -49,9 +125,6 @@ function Print({
         touchAction: "none",
       }}
       onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
     >
       <DesignLayer url={url} box={box} blend={blend} />
       {canDrag && <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="transparent" />}
@@ -68,20 +141,24 @@ function DesignLayer({
   box: Area;
   blend: "multiply" | "normal";
 }) {
-  return (
-    <svg x={box.x} y={box.y} width={box.w} height={box.h} viewBox="0 0 100 100" overflow="visible">
-      {url ? (
-        <image
-          href={url}
-          width="100"
-          height="100"
-          preserveAspectRatio="xMidYMid meet"
-          style={{ mixBlendMode: blend }}
-        />
-      ) : (
+  if (!url) {
+    return (
+      <g transform={`translate(${box.x} ${box.y}) scale(${box.w / 100} ${box.h / 100})`}>
         <SampleArt />
-      )}
-    </svg>
+      </g>
+    );
+  }
+
+  return (
+    <image
+      href={url}
+      x={box.x}
+      y={box.y}
+      width={box.w}
+      height={box.h}
+      preserveAspectRatio="none"
+      style={{ mixBlendMode: blend }}
+    />
   );
 }
 
@@ -164,42 +241,65 @@ const garments = {
   },
   hoodie: {
     front: {
-      body: "M180 62 Q250 125 320 62 L395 92 Q440 150 455 300 L460 435 L415 440 L405 300 L390 215 L390 455 Q250 468 110 455 L110 215 L95 300 L85 440 L40 435 L45 300 Q60 150 105 92 Z",
-      hood: "M168 72 Q250 -12 332 72 Q305 128 250 132 Q195 128 168 72 Z",
+      body: "M176 68 C210 48 228 100 250 128 C272 100 290 48 324 68 L388 96 C430 140 452 220 458 310 L452 428 L408 436 L398 300 L382 214 L376 448 C300 466 200 466 124 448 L118 214 L102 300 L92 436 L48 428 L42 310 C48 220 70 140 112 96 Z",
+      hood: "M158 78 C190 8 310 8 342 78 C318 132 250 140 C182 132 158 78 Z",
       details: (
         <>
-          <path d="M168 72 Q250 -12 332 72" fill="none" strokeWidth="2" opacity="0.35" />
-          <path d="M180 62 Q250 125 320 62" fill="none" strokeWidth="10" />
+          <path d="M158 78 C190 8 310 8 342 78" fill="none" strokeWidth="2.5" opacity="0.4" />
           <path
-            d="M228 108 L222 185 M272 108 L278 185"
+            d="M176 68 C210 48 228 100 250 128 C272 100 290 48 324 68"
+            fill="none"
+            strokeWidth="12"
+          />
+          <path
+            d="M226 112 L218 188 M274 112 L282 188"
             fill="none"
             strokeWidth="4"
             strokeLinecap="round"
           />
           <path
-            d="M172 330 L328 330 L348 420 L152 420 Z"
+            d="M168 328 C210 318 290 318 332 328 L350 418 L150 418 Z"
             fill="none"
             strokeWidth="2.5"
-            opacity="0.5"
+            opacity="0.55"
           />
-          <path d="M110 440 L390 440" fill="none" strokeWidth="14" opacity="0.25" />
-          <path d="M40 425 L85 430 M415 430 L460 425" fill="none" strokeWidth="12" opacity="0.3" />
+          <path d="M250 328 L250 416" fill="none" strokeWidth="1.5" opacity="0.35" />
+          <path d="M124 436 C190 452 310 452 376 436" fill="none" strokeWidth="10" opacity="0.28" />
+          <path d="M130 446 C200 458 300 458 370 446" fill="none" strokeWidth="4" opacity="0.22" />
+          <path d="M52 412 L90 422 M56 424 L94 434" fill="none" strokeWidth="3" opacity="0.35" />
+          <path
+            d="M410 422 L448 412 M406 434 L444 424"
+            fill="none"
+            strokeWidth="3"
+            opacity="0.35"
+          />
         </>
       ),
-      folds: "M140 300 Q170 340 150 400 M355 290 Q330 340 350 400 M120 140 Q150 180 130 220",
+      folds: "M145 250 Q175 320 155 410 M355 245 Q325 320 348 410 M118 150 Q148 190 128 230",
     },
     back: {
-      body: "M190 78 Q250 108 310 78 L395 100 Q440 155 455 300 L460 435 L415 440 L405 300 L390 215 L390 455 Q250 468 110 455 L110 215 L95 300 L85 440 L40 435 L45 300 Q60 155 105 100 Z",
-      hood: "M165 88 Q250 8 335 88 Q310 48 250 42 Q190 48 165 88 Z",
+      body: "M188 82 C214 70 232 96 250 104 C268 96 286 70 312 82 L388 104 C430 148 452 220 458 310 L452 428 L408 436 L398 300 L382 214 L376 448 C300 466 200 466 124 448 L118 214 L102 300 L92 436 L48 428 L42 310 C48 220 70 148 112 104 Z",
+      hood: "M162 92 C198 18 302 18 338 92 C314 52 250 46 C186 52 162 92 Z",
       details: (
         <>
-          <path d="M165 88 Q250 8 335 88" fill="none" strokeWidth="2" opacity="0.35" />
-          <path d="M190 78 Q250 108 310 78" fill="none" strokeWidth="8" />
-          <path d="M110 440 L390 440" fill="none" strokeWidth="14" opacity="0.25" />
-          <path d="M40 425 L85 430 M415 430 L460 425" fill="none" strokeWidth="12" opacity="0.3" />
+          <path d="M162 92 C198 18 302 18 338 92" fill="none" strokeWidth="2.5" opacity="0.4" />
+          <path
+            d="M188 82 C214 70 232 96 250 104 C268 96 286 70 312 82"
+            fill="none"
+            strokeWidth="9"
+          />
+          <path d="M124 436 C190 452 310 452 376 436" fill="none" strokeWidth="10" opacity="0.28" />
+          <path d="M130 446 C200 458 300 458 370 446" fill="none" strokeWidth="4" opacity="0.22" />
+          <path d="M52 412 L90 422 M56 424 L94 434" fill="none" strokeWidth="3" opacity="0.35" />
+          <path
+            d="M410 422 L448 412 M406 434 L444 424"
+            fill="none"
+            strokeWidth="3"
+            opacity="0.35"
+          />
         </>
       ),
-      folds: "M160 240 Q190 300 170 390 M340 230 Q310 300 330 390 M250 160 Q255 280 245 400",
+      folds: "M160 230 Q195 310 170 420 M340 220 Q310 310 335 420 M250 150 Q255 280 245 430",
     },
   },
 };
@@ -210,58 +310,121 @@ export function Mockup({
   side,
   color,
   design,
-  scale,
-  nx,
-  ny,
-  onMove,
+  x,
+  y,
+  w,
+  h,
+  onPlace,
 }: {
   svgRef: RefObject<SVGSVGElement | null>;
   product: Product;
   side: PrintSide;
   color: Fabric | undefined;
   design: string | undefined;
-  scale: number;
-  nx: number;
-  ny: number;
-  onMove: (nx: number, ny: number) => void;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  onPlace: (x: number, y: number, w: number, h: number) => void;
 }) {
   const uid = useId().replace(/:/g, "");
   const area = printArea(product, side);
-  const box = placeDesign(area, scale, nx, ny);
+  const box = placeBox(area, x, y, w, h);
   const fill = color?.fill ?? "#fff";
   const light = color?.light ?? true;
-  const blend = product.id === "sticker" || !light ? "normal" : "multiply";
+  const blend = product.id === "mug" && light ? "multiply" : "normal";
   const stroke = light ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.14)";
-  const freeX = area.w * (1 - scale);
-  const freeY = area.h * (1 - scale);
-  const canDrag = freeX > 1 || freeY > 1;
-  const drag = useRef<{ px: number; py: number; nx: number; ny: number } | null>(null);
+  const rotate = product.id === "sticker";
+  const canDrag = Boolean(design) && (w < 0.999 || h < 0.999);
+  const gesture = useRef<Gesture | null>(null);
   const [grabbing, setGrabbing] = useState(false);
+  const placeRef = useRef(onPlace);
+  const areaRef = useRef(area);
+  const applyRef = useRef<(event: { clientX: number; clientY: number }) => void>(() => {});
+  placeRef.current = onPlace;
+  areaRef.current = area;
+
+  const applyGesture = (event: { clientX: number; clientY: number }) => {
+    const current = gesture.current;
+    const svg = svgRef.current;
+    if (!current || !svg) return;
+    const pointer = clientToUser(svg, event.clientX, event.clientY, rotate);
+    if (!pointer) return;
+    const printAreaNow = areaRef.current;
+    if (current.kind === "move") {
+      placeRef.current(
+        clamp(current.x + (pointer.x - current.sx) / printAreaNow.w, 0, 1 - current.w),
+        clamp(current.y + (pointer.y - current.sy) / printAreaNow.h, 0, 1 - current.h),
+        current.w,
+        current.h,
+      );
+      return;
+    }
+    const next = resizeBox(current.corner, current.opposite, pointer, printAreaNow);
+    placeRef.current(next.x, next.y, next.w, next.h);
+  };
+  applyRef.current = applyGesture;
+
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      if (!gesture.current || event.pointerId !== gesture.current.id) return;
+      applyRef.current(event);
+    };
+    const up = (event: PointerEvent) => {
+      if (!gesture.current || event.pointerId !== gesture.current.id) return;
+      gesture.current = null;
+      setGrabbing(false);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
+  }, []);
+
+  const capture = (event: ReactPointerEvent<SVGGElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const svg = svgRef.current;
+    if (!svg) return;
+    try {
+      svg.setPointerCapture(event.pointerId);
+    } catch {
+      // The window listener still follows the pointer if capture is rejected.
+    }
+  };
 
   const onPointerDown = (event: ReactPointerEvent<SVGGElement>) => {
     if (!canDrag) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    drag.current = { px: event.clientX, py: event.clientY, nx, ny };
+    const svg = svgRef.current;
+    if (!svg) return;
+    const pointer = clientToUser(svg, event.clientX, event.clientY, rotate);
+    if (!pointer) return;
+    capture(event);
+    gesture.current = {
+      kind: "move",
+      id: event.pointerId,
+      sx: pointer.x,
+      sy: pointer.y,
+      x,
+      y,
+      w,
+      h,
+    };
     setGrabbing(true);
   };
 
-  const onPointerMove = (event: ReactPointerEvent<SVGGElement>) => {
-    const start = drag.current;
-    const svg = svgRef.current;
-    if (!start || !svg) return;
-    const rect = svg.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const dx = ((event.clientX - start.px) / rect.width) * 500;
-    const dy = ((event.clientY - start.py) / rect.height) * 500;
-    onMove(
-      freeX > 1 ? clamp(start.nx + dx / freeX, 0, 1) : start.nx,
-      freeY > 1 ? clamp(start.ny + dy / freeY, 0, 1) : start.ny,
-    );
-  };
-
-  const endDrag = () => {
-    drag.current = null;
-    setGrabbing(false);
+  const onResizeDown = (corner: Corner, event: ReactPointerEvent<SVGGElement>) => {
+    capture(event);
+    gesture.current = {
+      kind: "resize",
+      id: event.pointerId,
+      corner,
+      opposite: oppositeCorner(corner, box),
+    };
   };
 
   const print = (
@@ -272,15 +435,13 @@ export function Mockup({
       canDrag={canDrag}
       grabbing={grabbing}
       onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
     />
   );
 
   const label =
     product.id === "sticker"
-      ? "Превью наклейки с вашим дизайном. Принт можно перетащить."
-      : `Превью: ${product.name.toLowerCase()}, ${printNote(product, side).toLowerCase()}, цвет ${color?.name.toLowerCase()}. Принт можно перетащить.`;
+      ? "Превью наклейки с вашим дизайном. Принт можно перетащить и изменить размер за углы."
+      : `Превью: ${product.name.toLowerCase()}, ${printNote(product, side).toLowerCase()}, цвет ${color?.name.toLowerCase()}. Принт можно перетащить и изменить размер за углы.`;
 
   return (
     <svg
@@ -403,7 +564,64 @@ export function Mockup({
           {print}
         </g>
       )}
+
+      {design && (
+        <Selection box={box} rotate={product.id === "sticker"} onResizeDown={onResizeDown} />
+      )}
     </svg>
+  );
+}
+
+function Selection({
+  box,
+  rotate,
+  onResizeDown,
+}: {
+  box: Area;
+  rotate: boolean;
+  onResizeDown: (corner: Corner, event: ReactPointerEvent<SVGGElement>) => void;
+}) {
+  const corners = [
+    ["nw", box.x, box.y, "nwse-resize"],
+    ["ne", box.x + box.w, box.y, "nesw-resize"],
+    ["sw", box.x, box.y + box.h, "nesw-resize"],
+    ["se", box.x + box.w, box.y + box.h, "nwse-resize"],
+  ] as const;
+
+  return (
+    <g data-export="hide" transform={rotate ? "rotate(-6 250 250)" : undefined}>
+      <rect
+        x={box.x}
+        y={box.y}
+        width={box.w}
+        height={box.h}
+        fill="none"
+        stroke="var(--ink)"
+        strokeWidth={1.5}
+        strokeDasharray="6 4"
+        pointerEvents="none"
+      />
+      {corners.map(([corner, x, y, cursor]) => (
+        <g
+          key={corner}
+          data-handle={corner}
+          transform={`translate(${x} ${y})`}
+          style={{ cursor, touchAction: "none" }}
+          onPointerDown={(event) => onResizeDown(corner, event)}
+        >
+          <rect x={-22} y={-22} width={44} height={44} fill="transparent" />
+          <rect
+            x={-8}
+            y={-8}
+            width={16}
+            height={16}
+            fill="var(--paper)"
+            stroke="var(--ink)"
+            strokeWidth={2}
+          />
+        </g>
+      ))}
+    </g>
   );
 }
 
@@ -429,7 +647,6 @@ function Garment({
       </clipPath>
       <path d={shape.body} fill={fill} />
       <g clipPath={`url(#${uid}-body)`}>
-        {design}
         <g style={{ pointerEvents: "none" }}>
           <rect width="500" height="500" fill={`url(#${uid}-side)`} />
           <rect width="500" height="500" fill={`url(#${uid}-hi)`} />
@@ -449,6 +666,7 @@ function Garment({
             style={{ mixBlendMode: "multiply" }}
           />
         </g>
+        {design}
       </g>
       <g stroke={stroke}>{shape.details}</g>
     </g>

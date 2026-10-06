@@ -23,9 +23,10 @@ export function TryOn() {
   const [mockup, setMockup] = useState<File | null>(null);
   const [shareStatus, setShareStatus] = useState<ShareResult | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const [scale, setScale] = useState(80);
-  const [nx, setNx] = useState(50);
-  const [ny, setNy] = useState(15);
+  const [x, setX] = useState(10);
+  const [y, setY] = useState(3);
+  const [w, setW] = useState(80);
+  const [h, setH] = useState(80);
   const [error, setError] = useState<string | null>(null);
 
   const product = products.find((item) => item.id === productId) ?? products[0]!;
@@ -36,8 +37,10 @@ export function TryOn() {
   useEffect(() => onTryOnRequest(setProductId), []);
   useEffect(() => {
     setSide("front");
-    setNx(50);
-    setNy(productId === "sticker" ? 50 : 15);
+    setX(10);
+    setY(productId === "sticker" ? 10 : 3);
+    setW(80);
+    setH(80);
   }, [productId]);
   useEffect(() => () => releaseDesign(design), [design]);
 
@@ -68,7 +71,7 @@ export function TryOn() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [design, product.id, product.back, side, color, caption, scale, nx, ny]);
+  }, [design, product.id, product.back, side, color, caption, x, y, w, h]);
 
   const acceptFile = async (file: File) => {
     setError(null);
@@ -127,22 +130,48 @@ export function TryOn() {
             side={side}
             onSide={setSide}
             fileName={design?.name}
+            fileSize={design?.file.size}
+            previewUrl={design?.preview?.url}
             busy={loading}
             error={error}
             onFile={(file) => void acceptFile(file)}
-            scale={scale}
-            onScale={setScale}
-            nx={nx}
-            onNx={setNx}
-            ny={ny}
-            onNy={setNy}
+            onClear={() => {
+              setError(null);
+              setShareStatus(null);
+              setMockup(null);
+              setDesign(null);
+            }}
+            x={x}
+            y={y}
+            w={w}
+            h={h}
+            onX={setX}
+            onY={setY}
+            onWidth={(value) => {
+              setW(value);
+              setX((left) => Math.min(left, 100 - value));
+            }}
+            onHeight={(value) => {
+              setH(value);
+              setY((top) => Math.min(top, 100 - value));
+            }}
+            canPlace={design?.preview != null}
             canSend={design !== null}
             onSend={send}
             shareStatus={shareStatus}
             withPreview={mockup !== null}
           />
 
-          <div className="order-1 lg:order-2">
+          <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <p className="eyebrow min-w-0 text-ink/60">
+                {product.name}
+                {color && ` · ${color.name.toLowerCase()}`}
+              </p>
+              <p className="eyebrow max-w-[55%] text-right text-ink/60">
+                {printNote(product, product.back ? side : "front")}
+              </p>
+            </div>
             <div className="relative aspect-square w-full overflow-hidden border-2 border-ink bg-card">
               <div
                 aria-hidden
@@ -154,22 +183,18 @@ export function TryOn() {
                 side={product.back ? side : "front"}
                 color={color}
                 design={design?.preview?.url}
-                scale={scale / 100}
-                nx={nx / 100}
-                ny={ny / 100}
-                onMove={(x, y) => {
-                  setNx(Math.round(x * 100));
-                  setNy(Math.round(y * 100));
+                x={x / 100}
+                y={y / 100}
+                w={w / 100}
+                h={h / 100}
+                onPlace={(nextX, nextY, nextW, nextH) => {
+                  setX(Math.round(nextX * 100));
+                  setY(Math.round(nextY * 100));
+                  setW(Math.round(nextW * 100));
+                  setH(Math.round(nextH * 100));
                 }}
               />
               <CropMarks className="m-6" />
-              <p className="eyebrow absolute top-4 left-4 text-ink/60">
-                {product.name}
-                {color && ` · ${color.name.toLowerCase()}`}
-              </p>
-              <p className="eyebrow absolute right-4 bottom-4 text-ink/60">
-                {printNote(product, product.back ? side : "front")}
-              </p>
               {design && !design.preview && (
                 <div className="absolute inset-x-6 bottom-14 border-2 border-ink bg-card p-4 text-sm shadow-[4px_4px_0_0_var(--orange)]">
                   <p className="font-semibold">

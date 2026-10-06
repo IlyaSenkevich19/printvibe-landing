@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write ."
   },
-  "overrides": {
+  "packageManager": "yarn@1.22.22",
+  "resolutions": {
     "rolldown": "1.2.1"
   },
   "dependencies": {

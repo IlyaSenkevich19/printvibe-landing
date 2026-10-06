@@ -15,6 +15,7 @@ export function Cases() {
     [],
   );
   const visible = filter === "all" ? cases : cases.filter((c) => c.category === filter);
+  const realOrders = cases.length > 0 && cases.every((item) => !item.demo);
 
   return (
     <section id="works" aria-labelledby="works-title" className="py-24 md:py-32">
@@ -23,20 +24,25 @@ export function Cases() {
           <div>
             <p className="eyebrow text-violet">Работы</p>
             <h2 id="works-title" className="mt-3 font-display text-4xl leading-none md:text-6xl">
-              Что мы уже напечатали
+              {realOrders ? "Что мы уже напечатали" : "Свежие заказы смотрите в Instagram"}
             </h2>
           </div>
           <p className="max-w-sm text-ink/70">
-            Реальные заказы наших клиентов. Ещё больше — в Instagram{" "}
-            <a
-              href={business.instagram.url}
-              target="_blank"
-              rel="noopener"
-              className="font-semibold text-violet underline-offset-4 hover:underline"
-            >
-              {business.instagram.handle}
-            </a>
-            .
+            {realOrders ? (
+              <>
+                Реальные заказы наших клиентов. Ещё больше — в Instagram <InstagramLink />.
+              </>
+            ) : cases.length > 0 ? (
+              <>
+                Ниже — примеры изделий, не заказы клиентов. Фото готовых работ публикуем в Instagram{" "}
+                <InstagramLink />.
+              </>
+            ) : (
+              <>
+                На этой странице фото заказов пока нет. Готовые работы — одежда, кружки, стикеры —
+                публикуем в Instagram <InstagramLink />.
+              </>
+            )}
           </p>
         </div>
 
@@ -74,7 +80,7 @@ export function Cases() {
                       sizes="(min-width: 1024px) 240px, (min-width: 768px) 30vw, 45vw"
                       className="block w-full transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-105"
                     />
-                    <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-ink/85 px-3 py-2 text-sm font-medium text-paper opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-ink/85 px-3 py-2 text-sm font-medium text-paper opacity-100 transition-opacity duration-300 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-visible:opacity-100">
                       {item.caption}
                       <PlusIcon className="size-4 shrink-0" />
                     </span>
@@ -85,33 +91,53 @@ export function Cases() {
           </>
         )}
 
-        <div className="mt-12 grid gap-8 border-2 border-ink bg-card p-6 md:grid-cols-[1fr_auto] md:items-center md:p-10">
-          <div>
-            <p className="eyebrow text-ink/60">Больше работ</p>
-            <p className="mt-2 font-display text-2xl leading-tight md:text-4xl">
-              Свежие заказы — <span className="text-violet">{business.instagram.handle}</span>
-            </p>
-            <p className="mt-3 max-w-lg text-ink/70">
-              В Instagram показываем то, что напечатали для клиентов: принты на одежде, кружки,
-              стикеры.
-            </p>
+        {realOrders ? (
+          <div className="mt-12 grid gap-8 border-2 border-ink bg-card p-6 md:grid-cols-[1fr_auto] md:items-center md:p-10">
+            <div>
+              <p className="eyebrow text-ink/60">Больше работ</p>
+              <p className="mt-2 font-display text-2xl leading-tight md:text-4xl">
+                Свежие заказы — <span className="text-violet">{business.instagram.handle}</span>
+              </p>
+              <p className="mt-3 max-w-lg text-ink/70">
+                В Instagram показываем то, что напечатали для клиентов: принты на одежде, кружки,
+                стикеры.
+              </p>
+            </div>
+            <InstagramButton />
           </div>
-          <a
-            href={business.instagram.url}
-            target="_blank"
-            rel="noopener"
-            className="btn btn-orange"
-          >
-            <InstagramIcon />
-            Смотреть в Instagram
-          </a>
-        </div>
+        ) : (
+          <div className={cases.length > 0 ? "mt-12" : "mt-10"}>
+            <InstagramButton />
+          </div>
+        )}
       </div>
 
       {open !== null && (
         <Lightbox items={visible} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
       )}
     </section>
+  );
+}
+
+function InstagramLink() {
+  return (
+    <a
+      href={business.instagram.url}
+      target="_blank"
+      rel="noopener"
+      className="font-semibold text-violet underline-offset-4 hover:underline"
+    >
+      {business.instagram.handle}
+    </a>
+  );
+}
+
+function InstagramButton() {
+  return (
+    <a href={business.instagram.url} target="_blank" rel="noopener" className="btn btn-orange">
+      <InstagramIcon />
+      Смотреть в Instagram
+    </a>
   );
 }
 
@@ -179,9 +205,9 @@ function Lightbox({
           priority
           className="max-h-[75vh] w-full object-contain"
         />
-        <figcaption className="flex items-center justify-between gap-4 border-t-2 border-ink px-4 py-3">
+        <figcaption className="flex flex-col gap-3 border-t-2 border-ink px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="font-semibold">{item.caption}</span>
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 self-end sm:self-auto">
             <span className="mr-2 font-mono text-sm text-ink/60">
               {index + 1} / {items.length}
             </span>
@@ -219,7 +245,7 @@ function IconButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid size-10 place-items-center border-2 border-ink bg-card hover:bg-violet hover:text-white"
+      className="grid size-11 place-items-center border-2 border-ink bg-card hover:bg-violet hover:text-white"
     >
       {children}
     </button>
