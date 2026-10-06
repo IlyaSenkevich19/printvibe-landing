@@ -1,14 +1,31 @@
+User-agent: *
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
 User-agent: Googlebot
 Allow: /
 
-User-agent: Bingbot
+User-agent: GPTBot
 Allow: /
 
-User-agent: Twitterbot
+User-agent: OAI-SearchBot
 Allow: /
 
-User-agent: facebookexternalhit
+User-agent: ChatGPT-User
 Allow: /
 
-User-agent: *
+User-agent: PerplexityBot
 Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://printvibe.by/sitemap.xml
