@@ -7,8 +7,6 @@ export type Design = {
   preview?: { blob: Blob; url: string };
 };
 
-export const DESIGN_ACCEPT = "image/*,.heic,.heif,.pdf,.ai,.eps,.psd,.cdr,.tif,.tiff,.svg";
-
 const documentExtensions = ["pdf", "ai", "eps", "psd", "cdr", "tif", "tiff"];
 const heicExtensions = ["heic", "heif"];
 

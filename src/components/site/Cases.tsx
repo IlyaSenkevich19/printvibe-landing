@@ -14,7 +14,6 @@ export function Cases() {
     [],
   );
   const visible = filter === "all" ? cases : cases.filter((c) => c.category === filter);
-  const isDemo = cases.some((c) => c.demo);
 
   return (
     <section id="works" aria-labelledby="works-title" className="py-24 md:py-32">
@@ -39,13 +38,6 @@ export function Cases() {
             .
           </p>
         </div>
-
-        {isDemo && (
-          <p className="mt-8 border-2 border-dashed border-orange bg-orange/10 px-4 py-3 font-mono text-sm">
-            Демо-режим (виден только локально): положите фото работ в src/assets/cases — например
-            tshirt-01.jpg, mug-02.jpg — и они появятся здесь.
-          </p>
-        )}
 
         {cases.length > 0 && (
           <>
