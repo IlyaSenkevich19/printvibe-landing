@@ -8,31 +8,47 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Yarn
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/yarn
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
       - run: yarn install --frozen-lockfile
       - run: yarn tsc --noEmit -p .
-      - run: yarn eslint src vite.config.ts
+      - run: yarn lint
 
   deploy:
     needs: check
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -41,9 +57,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
-      - run: corepack enable
+      - name: Enable Yarn
+        run: |
+          npm install -g corepack@latest
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/yarn
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
       - run: yarn install --frozen-lockfile
+      - uses: actions/configure-pages@v5
       - run: yarn build
         env:
           GITHUB_PAGES: "true"

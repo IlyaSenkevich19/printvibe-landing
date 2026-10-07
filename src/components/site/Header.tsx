@@ -3,12 +3,14 @@ import { business } from "@/content/business";
 import { Logo } from "./Logo";
 import { PhoneIcon, TelegramIcon } from "./icons";
 
+const base = import.meta.env.BASE_URL;
+
 const nav = [
-  { href: "/#services", label: "Что печатаем" },
-  { href: "/#try", label: "Примерка" },
-  { href: "/#works", label: "Работы" },
-  { href: "/#how", label: "Как заказать" },
-  { href: "/#contacts", label: "Контакты" },
+  { href: `${base}#services`, label: "Что печатаем" },
+  { href: `${base}#try`, label: "Примерка" },
+  { href: `${base}#works`, label: "Работы" },
+  { href: `${base}#how`, label: "Как заказать" },
+  { href: `${base}#contacts`, label: "Контакты" },
 ];
 
 export function Header() {
