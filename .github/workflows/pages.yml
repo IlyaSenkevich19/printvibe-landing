@@ -73,6 +73,8 @@ jobs:
             yarn-${{ runner.os }}-
       - run: yarn install --frozen-lockfile
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: yarn build
         env:
           GITHUB_PAGES: "true"
