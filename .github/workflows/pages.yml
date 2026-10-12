@@ -3,7 +3,6 @@ name: Pages
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -14,35 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - name: Enable Yarn
-        run: |
-          npm install -g corepack@latest
-          corepack enable
-          corepack prepare yarn@1.22.22 --activate
-        env:
-          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
-      - name: Cache Yarn
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/yarn
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
-      - run: yarn install --frozen-lockfile
-      - run: yarn tsc --noEmit -p .
-      - run: yarn lint
-
   deploy:
-    needs: check
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -73,8 +44,6 @@ jobs:
             yarn-${{ runner.os }}-
       - run: yarn install --frozen-lockfile
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - run: yarn build
         env:
           GITHUB_PAGES: "true"

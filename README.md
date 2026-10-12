@@ -14,6 +14,6 @@ yarn dev
 
 Сайт открывается на http://localhost:8080/. Если команда `yarn` не находится, один раз выполните `corepack enable` — она есть в Node 22.
 
-Проверки: `yarn tsc --noEmit -p .`, `yarn eslint src`, `yarn build`.
+Перед пушем локально запускается `yarn check` (типы и линтер). На GitHub при пуше в `main` код только собирается и публикуется.
 
-Пуш в `main` публикует превью на GitHub Pages, без своего домена: `https://ilyasenkevich19.github.io/printvibe-landing/`. В репозитории один раз включите Settings → Pages → Source: GitHub Actions.
+Превью без своего домена: `https://ilyasenkevich19.github.io/printvibe-landing/`.
