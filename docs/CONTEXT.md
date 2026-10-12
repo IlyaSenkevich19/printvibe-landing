@@ -5,7 +5,7 @@
 ## О проекте
 
 - Лендинг салона печати **PrintVibe** в Гомеле (Беларусь): печать на футболках, худи/свитшотах, кружках, наклейках, печать фото.
-- Владелец — друг пользователя. Репозиторий: `github.com/MatveyPodolnitsky/printvibe-landing-page`.
+- Заказчик — владелец салона. Репозиторий ведётся в `github.com/IlyaSenkevich19/printvibe-landing`. Старый адрес `github.com/MatveyPodolnitsky/printvibe-landing-page` больше не используется для публикации.
 
 ### Факты о бизнесе (подтверждены владельцем)
 
@@ -23,8 +23,7 @@
 
 ## Git
 
-- Работа ведётся в локальной ветке **`redesign`**. **Не пушить и не мержить в `main` без явной команды.**
-- Не переписывать опубликованную историю: без force push, rebase и amend уже запушенных коммитов.
+- Рабочая ветка — **`main`**. Не переписывать опубликованную историю: без force push, rebase и amend уже запушенных коммитов.
 - Lock-файл — `yarn.lock` (Yarn 1.22). **`package-lock.json` и `bun.lock` не коммитить.**
 
 ## Локальный запуск
@@ -41,7 +40,7 @@ yarn dev         # http://localhost:8080/
 
 ## Стек
 
-TanStack Start (SSR) + TanStack Router (file routes, `routeTree.gen.ts` генерится dev-сервером) + React 19 + Tailwind CSS v4 + Vite 8. Плагины собраны в `vite.config.ts`. Обычная сборка — Nitro `node-server`. Превью без своего домена — GitHub Pages: workflow `.github/workflows/pages.yml` при `GITHUB_PAGES=true` пререндерит `/` и `/privacy` в статику и публикует ветки `redesign` и `main` на `https://<owner>.github.io/printvibe-landing-page/`. В настройках репозитория Pages → Source должен быть **GitHub Actions**.
+TanStack Start (SSR) + TanStack Router (file routes, `routeTree.gen.ts` генерится dev-сервером) + React 19 + Tailwind CSS v4 + Vite 8. Плагины собраны в `vite.config.ts`. Обычная сборка — Nitro `node-server`. Превью без своего домена — GitHub Pages: workflow `.github/workflows/pages.yml` при `GITHUB_PAGES=true` пререндерит `/` и `/privacy` в статику и публикует ветку `main` на `https://ilyasenkevich19.github.io/printvibe-landing/`. В настройках репозитория Pages → Source должен быть **GitHub Actions**.
 
 ## Структура (то, что написано нами)
 

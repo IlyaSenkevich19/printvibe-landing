@@ -16,4 +16,4 @@ yarn dev
 
 Проверки: `yarn tsc --noEmit -p .`, `yarn eslint src`, `yarn build`.
 
-Пуш в `redesign` или `main` публикует превью на GitHub Pages, без своего домена: `https://matveypodolnitsky.github.io/printvibe-landing-page/`. В репозитории один раз включите Settings → Pages → Source: GitHub Actions.
+Пуш в `main` публикует превью на GitHub Pages, без своего домена: `https://ilyasenkevich19.github.io/printvibe-landing/`. В репозитории один раз включите Settings → Pages → Source: GitHub Actions.

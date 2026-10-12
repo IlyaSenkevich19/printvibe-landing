@@ -5,7 +5,7 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 const pages = process.env["GITHUB_PAGES"] === "true";
-const pagesBase = process.env["PAGES_BASE"] ?? "/printvibe-landing-page/";
+const pagesBase = process.env["PAGES_BASE"] ?? "/printvibe-landing/";
 
 export default defineConfig(({ command }) => ({
   base: pages ? pagesBase : "/",
