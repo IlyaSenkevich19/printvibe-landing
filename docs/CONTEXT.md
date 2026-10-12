@@ -34,7 +34,7 @@ yarn             # если node_modules ставились на другой в
 yarn dev         # http://localhost:8080/
 ```
 
-Если `yarn` не находится: один раз `corepack enable`. Перед пушем хук `.githooks/pre-push` запускает `yarn check` (типы и линтер). На GitHub Actions при пуше в `main` только сборка и публикация, без повторных проверок. После билда удалять `.output`.
+Если `yarn` не находится: один раз `corepack enable`. Перед пушем хук `.githooks/pre-push` запускает `yarn verify` (типы и линтер). На GitHub Actions при пуше в `main` только сборка и публикация, без повторных проверок. После билда удалять `.output`.
 
 В `tsconfig` включены `noUncheckedIndexedAccess` и `exactOptionalPropertyTypes` — для опциональных пропсов, которым передаётся `undefined`, писать `T | undefined`.
 
