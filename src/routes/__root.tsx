@@ -7,28 +7,39 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
+import { setupOffline } from "@/lib/offline";
 import appCss from "../styles.css?url";
 
 const publicFile = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <p className="font-display text-8xl text-violet">404</p>
-        <h1 className="mt-4 text-xl font-semibold text-foreground">Страница не найдена</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Возможно, она была удалена или вы перешли по неверной ссылке.
+    <main className="grid min-h-screen place-items-center bg-background px-5 py-8">
+      <div className="w-full max-w-xl text-center">
+        <div
+          aria-hidden
+          className="font-display text-[clamp(6rem,32vw,11rem)] leading-none [text-shadow:-0.035em_0.02em_0_var(--violet),0.03em_0.04em_0_var(--orange)]"
+        >
+          404
+        </div>
+        <h1 className="mt-6 font-display text-[clamp(1.5rem,6vw,2.25rem)] leading-[1.1]">
+          Такой страницы нет
+        </h1>
+        <p className="mx-auto mt-3 max-w-md text-balance text-muted-foreground">
+          Возможно, ссылка устарела или в адресе опечатка. Всё главное — на основной странице.
         </p>
-        <div className="mt-8">
+        <div className="mt-9 flex flex-wrap justify-center gap-4 max-[30rem]:[&>a]:w-full">
           <Link to="/" className="btn btn-primary">
             На главную
           </Link>
+          <Link to="/" hash="try" className="btn btn-ghost">
+            Примерить свой макет
+          </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -119,6 +130,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(setupOffline, []);
 
   return (
     <QueryClientProvider client={queryClient}>

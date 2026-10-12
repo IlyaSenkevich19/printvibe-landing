@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#f4f0e8" />
+    <title>Страница не найдена — PrintVibe</title>
+    <link rel="icon" href="%BASE%favicon.png" type="image/png" />
+    <style>
+      @font-face {
+        font-family: "Dela Gothic One";
+        font-display: swap;
+        src: url("%BASE%fonts/dela-gothic-one-cyrillic.woff2") format("woff2");
+        unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+      }
+      @font-face {
+        font-family: "Dela Gothic One";
+        font-display: swap;
+        src: url("%BASE%fonts/dela-gothic-one-latin.woff2") format("woff2");
+        unicode-range: U+0000-00FF, U+2000-206F;
+      }
+      @font-face {
+        font-family: "Onest";
+        font-weight: 400 800;
+        font-display: swap;
+        src: url("%BASE%fonts/onest-cyrillic.woff2") format("woff2");
+        unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+      }
+      @font-face {
+        font-family: "Onest";
+        font-weight: 400 800;
+        font-display: swap;
+        src: url("%BASE%fonts/onest-latin.woff2") format("woff2");
+        unicode-range: U+0000-00FF, U+2000-206F;
+      }
+      :root {
+        --paper: oklch(0.962 0.012 85);
+        --ink: oklch(0.19 0.03 295);
+        --muted: oklch(0.42 0.03 295);
+        --card: oklch(0.985 0.006 85);
+        --violet: oklch(0.5 0.28 290);
+        --orange: oklch(0.72 0.18 50);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem 1.25rem;
+        background: var(--paper);
+        color: var(--ink);
+        font: 400 1rem/1.5 "Onest", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        width: 100%;
+        max-width: 36rem;
+        text-align: center;
+      }
+      .code {
+        font: 400 clamp(6rem, 32vw, 11rem) / 1 "Dela Gothic One", "Arial Black", sans-serif;
+        text-shadow:
+          -0.035em 0.02em 0 var(--violet),
+          0.03em 0.04em 0 var(--orange);
+      }
+      h1 {
+        margin: 1.5rem 0 0;
+        font: 400 clamp(1.5rem, 6vw, 2.25rem) / 1.1 "Dela Gothic One", "Arial Black", sans-serif;
+      }
+      p {
+        margin: 0.75rem auto 0;
+        max-width: 26rem;
+        color: var(--muted);
+        text-wrap: balance;
+      }
+      .actions {
+        margin-top: 2.25rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.25rem;
+        padding: 0.85rem 1.5rem;
+        border: 2px solid var(--ink);
+        font-weight: 700;
+        line-height: 1;
+        text-decoration: none;
+        box-shadow: 5px 5px 0 0 var(--shadow, var(--orange));
+        transition:
+          transform 180ms,
+          box-shadow 180ms;
+      }
+      .btn:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 7px 7px 0 0 var(--shadow, var(--orange));
+      }
+      .btn:active {
+        transform: translate(4px, 4px);
+        box-shadow: 1px 1px 0 0 var(--shadow, var(--orange));
+      }
+      .btn:focus-visible {
+        outline: 3px solid var(--violet);
+        outline-offset: 3px;
+      }
+      .primary {
+        background: var(--violet);
+        color: #fff;
+      }
+      .ghost {
+        background: var(--card);
+        color: var(--ink);
+        --shadow: var(--ink);
+      }
+      @media (max-width: 30rem) {
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="code" aria-hidden="true">404</div>
+      <h1>Такой страницы нет</h1>
+      <p>Возможно, ссылка устарела или в адресе опечатка. Всё главное — на основной странице.</p>
+      <div class="actions">
+        <a class="btn primary" href="%BASE%">На главную</a>
+        <a class="btn ghost" href="%BASE%#try">Примерить свой макет</a>
+      </div>
+    </main>
+  </body>
+</html>
