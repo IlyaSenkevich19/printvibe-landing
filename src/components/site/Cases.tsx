@@ -67,7 +67,7 @@ export function Cases() {
 
             <ul className="mt-8 columns-2 gap-4 md:columns-3 lg:columns-4">
               {visible.map((item, i) => (
-                <li key={item.src + i} className="reveal mb-4 break-inside-avoid">
+                <li key={item.src + i} className="mb-4 break-inside-avoid">
                   <button
                     type="button"
                     onClick={() => setOpen(i)}

@@ -162,7 +162,7 @@ export function TryOn() {
             withPreview={mockup !== null}
           />
 
-          <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
+          <div className="order-1 lg:order-2">
             <div className="mb-3 flex items-start justify-between gap-3">
               <p className="eyebrow min-w-0 text-ink/60">
                 {product.name}

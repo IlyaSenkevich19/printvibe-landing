@@ -5,7 +5,7 @@ export function Faq() {
   return (
     <section id="faq" aria-labelledby="faq-title" className="py-24 md:py-32">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[1fr_1.6fr]">
-        <div className="lg:sticky lg:top-28 lg:self-start">
+        <div>
           <p className="eyebrow text-violet">FAQ</p>
           <h2 id="faq-title" className="mt-3 font-display text-4xl leading-none md:text-6xl">
             Частые вопросы

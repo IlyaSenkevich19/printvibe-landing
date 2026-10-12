@@ -30,7 +30,7 @@ export function Services() {
 
         <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[auto_auto]">
           {services.map((s, i) => (
-            <li key={s.id} className={`reveal ${layout[s.id] ?? ""}`}>
+            <li key={s.id} className={layout[s.id] ?? ""}>
               {s.image ? <ImageCard service={s} index={i} /> : <PhotoCard service={s} index={i} />}
             </li>
           ))}

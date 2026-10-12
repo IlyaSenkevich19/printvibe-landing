@@ -23,11 +23,11 @@ export function Process() {
 
         <ol className="mt-16 grid gap-px bg-white/25 md:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, i) => (
-            <li key={step.title} className="reveal flex flex-col bg-violet p-7 pt-8 md:min-h-72">
+            <li key={step.title} className="flex flex-col bg-violet p-7 pt-8 md:min-h-72">
               <span className="font-display text-6xl text-orange md:text-7xl">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span aria-hidden className="reveal-line mt-6 block h-0.5 w-full bg-white/40" />
+              <span aria-hidden className="mt-6 block h-0.5 w-full bg-white/40" />
               <h3 className="mt-6 text-xl font-bold">{step.title}</h3>
               <p className="mt-2 text-white/80">{step.text}</p>
             </li>
