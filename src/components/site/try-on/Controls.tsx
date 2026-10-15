@@ -88,7 +88,7 @@ export function TryOnControls({
               <label
                 key={item.id}
                 title={item.name}
-                className="grid size-11 cursor-pointer place-items-center rounded-full border-2 border-ink/20 transition-transform hover:scale-110 has-checked:border-ink has-checked:ring-2 has-checked:ring-violet has-checked:ring-offset-2 has-checked:ring-offset-paper-deep has-focus-visible:ring-2 has-focus-visible:ring-violet"
+                className="grid size-11 cursor-pointer place-items-center rounded-full border-2 border-ink/20 transition-colors hover:border-ink has-checked:border-ink has-checked:ring-2 has-checked:ring-violet has-checked:ring-offset-2 has-checked:ring-offset-paper-deep has-focus-visible:ring-2 has-focus-visible:ring-violet"
                 style={{ background: item.fill }}
               >
                 <input

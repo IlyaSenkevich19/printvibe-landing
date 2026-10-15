@@ -171,6 +171,11 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 5rem;
@@ -249,30 +254,26 @@
     line-height: 1;
     border: 2px solid var(--ink);
     box-shadow: 5px 5px 0 0 var(--btn-shadow, var(--orange));
-    transition:
-      transform 180ms var(--ease-out-expo),
-      box-shadow 180ms var(--ease-out-expo),
-      background-color 180ms;
+    background: var(--btn-bg);
+    transition: background-color 180ms;
   }
   .btn:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0 0 var(--btn-shadow, var(--orange));
-  }
-  .btn:active {
-    transform: translate(4px, 4px);
-    box-shadow: 1px 1px 0 0 var(--btn-shadow, var(--orange));
+    background: var(--btn-bg-hover);
   }
   .btn-primary {
-    background: var(--violet);
+    --btn-bg: var(--violet);
+    --btn-bg-hover: oklch(0.42 0.24 290);
     color: white;
   }
   .btn-ghost {
-    background: var(--card);
+    --btn-bg: var(--card);
+    --btn-bg-hover: var(--paper-deep);
     color: var(--ink);
     --btn-shadow: var(--ink);
   }
   .btn-orange {
-    background: var(--orange);
+    --btn-bg: var(--orange);
+    --btn-bg-hover: oklch(0.66 0.19 48);
     color: var(--ink);
     --btn-shadow: var(--ink);
   }
@@ -281,9 +282,6 @@
     padding: 0.55rem 0.9rem;
     font-size: 0.95rem;
     box-shadow: 3px 3px 0 0 var(--btn-shadow, var(--orange));
-  }
-  .btn-compact:hover {
-    box-shadow: 5px 5px 0 0 var(--btn-shadow, var(--orange));
   }
 
   /* Native file button stays in the document flow. Only its own button is painted. */
@@ -308,19 +306,11 @@
     padding: 0.7rem 1.15rem;
     cursor: pointer;
     box-shadow: 3px 3px 0 0 var(--orange);
-    transition:
-      transform 180ms var(--ease-out-expo),
-      box-shadow 180ms var(--ease-out-expo);
+    transition: background-color 180ms;
   }
   .design-file:hover::-webkit-file-upload-button,
   .design-file:hover::file-selector-button {
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0 0 var(--orange);
-  }
-  .design-file:active::-webkit-file-upload-button,
-  .design-file:active::file-selector-button {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0 0 var(--orange);
+    background: oklch(0.42 0.24 290);
   }
   .design-file:disabled::-webkit-file-upload-button,
   .design-file:disabled::file-selector-button {

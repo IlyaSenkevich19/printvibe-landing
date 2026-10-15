@@ -76,12 +76,24 @@ function CardBody({
   );
 }
 
+const card =
+  "group flex h-full flex-col overflow-hidden border-2 border-ink bg-card transition-colors duration-300 hover:border-violet focus-within:border-violet";
+
+function HoverBar({ color = "bg-violet" }: { color?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`absolute inset-x-0 bottom-0 h-1.5 origin-left scale-x-0 ${color} transition-transform duration-500 ease-[var(--ease-out-expo)] group-focus-within:scale-x-100 group-hover:scale-x-100`}
+    />
+  );
+}
+
 function ImageCard({ service, index }: { service: Service; index: number }) {
   const big = service.id === "tshirts";
   return (
-    <article className="group flex h-full flex-col overflow-hidden border-2 border-ink bg-card transition-[transform,box-shadow] duration-300 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--violet)]">
+    <article className={card}>
       <div
-        className={`relative overflow-hidden border-b-2 border-ink ${big ? "lg:min-h-0 lg:flex-1" : ""}`}
+        className={`relative overflow-hidden border-b-2 border-ink transition-colors duration-300 group-hover:border-violet ${big ? "lg:min-h-0 lg:flex-1" : ""}`}
       >
         {service.image && (
           <WorkPhoto
@@ -97,6 +109,7 @@ function ImageCard({ service, index }: { service: Service; index: number }) {
             }`}
           />
         )}
+        <HoverBar />
       </div>
       <CardBody service={service} index={index} grow={!big} />
     </article>
@@ -105,10 +118,10 @@ function ImageCard({ service, index }: { service: Service; index: number }) {
 
 function PhotoCard({ service, index }: { service: Service; index: number }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden border-2 border-ink bg-card transition-[transform,box-shadow] duration-300 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--violet)]">
+    <article className={card}>
       <div
         aria-hidden
-        className="relative grid aspect-[4/3] place-items-center overflow-hidden border-b-2 border-ink bg-violet lg:aspect-[8/3]"
+        className="relative grid aspect-[4/3] place-items-center overflow-hidden border-b-2 border-ink bg-violet transition-colors duration-300 group-hover:border-violet lg:aspect-[8/3]"
       >
         <div className="halftone absolute inset-0 text-white/20" />
         {[-10, 4, -2].map((deg, i) => (
@@ -129,6 +142,7 @@ function PhotoCard({ service, index }: { service: Service; index: number }) {
             />
           </span>
         ))}
+        <HoverBar color="bg-orange" />
       </div>
       <CardBody service={service} index={index} />
     </article>

@@ -95,17 +95,7 @@
         line-height: 1;
         text-decoration: none;
         box-shadow: 5px 5px 0 0 var(--shadow, var(--orange));
-        transition:
-          transform 180ms,
-          box-shadow 180ms;
-      }
-      .btn:hover {
-        transform: translate(-2px, -2px);
-        box-shadow: 7px 7px 0 0 var(--shadow, var(--orange));
-      }
-      .btn:active {
-        transform: translate(4px, 4px);
-        box-shadow: 1px 1px 0 0 var(--shadow, var(--orange));
+        transition: background-color 180ms;
       }
       .btn:focus-visible {
         outline: 3px solid var(--violet);
@@ -115,10 +105,16 @@
         background: var(--violet);
         color: #fff;
       }
+      .primary:hover {
+        background: oklch(0.42 0.24 290);
+      }
       .ghost {
         background: var(--card);
         color: var(--ink);
         --shadow: var(--ink);
+      }
+      .ghost:hover {
+        background: oklch(0.925 0.018 85);
       }
       @media (max-width: 30rem) {
         .btn {

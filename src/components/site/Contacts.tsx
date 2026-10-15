@@ -115,7 +115,7 @@ function ContactLink({
     <a
       href={href}
       {...(external && { target: "_blank", rel: "noopener" })}
-      className="group flex items-center gap-4 border-2 border-ink bg-card px-4 py-3.5 transition-[transform,box-shadow] duration-200 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0_0_var(--violet)]"
+      className="group flex items-center gap-4 border-2 border-ink bg-card px-4 py-3.5 transition-colors duration-200 hover:border-violet hover:bg-violet-soft"
     >
       <span className="grid size-10 shrink-0 place-items-center bg-violet text-white">{icon}</span>
       <span>
