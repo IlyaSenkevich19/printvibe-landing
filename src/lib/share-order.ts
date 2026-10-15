@@ -2,17 +2,15 @@ import { business } from "@/content/business";
 
 export type ShareResult = "shared" | "cancelled" | "fallback";
 
-export function canShareFiles(files: File[]) {
-  return typeof navigator !== "undefined" && !!navigator.canShare?.({ files });
+function canShare(file: File) {
+  return typeof navigator !== "undefined" && !!navigator.canShare?.({ files: [file] });
 }
 
-/** True when this browser can hand image files to the system share sheet. */
-export function browserCanShareFiles() {
+/** True when this browser can hand a .zip to the system share sheet (Safari does, Chrome does not). */
+export function browserCanShareArchive() {
   if (typeof navigator === "undefined" || typeof navigator.canShare !== "function") return false;
   try {
-    return navigator.canShare({
-      files: [new File(["."], "preview.png", { type: "image/png" })],
-    });
+    return canShare(new File(["."], "order.zip", { type: "application/zip" }));
   } catch {
     return false;
   }
@@ -23,36 +21,32 @@ export function browserCanShareFiles() {
  * and browsers block window.open() once the user gesture has expired.
  */
 export function shareOrder({
-  files,
+  archive,
   text,
-  download,
 }: {
-  files: File[];
+  archive: File;
   text: string;
-  download?: File;
 }): Promise<ShareResult> {
-  if (canShareFiles(files)) {
+  if (canShare(archive)) {
     return navigator
-      .share({ files, text })
+      .share({ files: [archive], text })
       .then(() => "shared" as const)
       .catch((e: unknown) => {
         if (e instanceof DOMException && e.name === "AbortError") return "cancelled" as const;
-        return fallback(text, download);
+        return fallback(text, archive);
       });
   }
-  return fallback(text, download);
+  return fallback(text, archive);
 }
 
-function fallback(text: string, download?: File): Promise<ShareResult> {
+function fallback(text: string, archive: File): Promise<ShareResult> {
   const copied = navigator.clipboard?.writeText(text) ?? Promise.resolve();
-  if (download) {
-    const url = URL.createObjectURL(download);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = download.name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  }
+  const url = URL.createObjectURL(archive);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = archive.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
   window.open(business.telegram.url, "_blank", "noopener");
   return copied.then(
     () => "fallback" as const,

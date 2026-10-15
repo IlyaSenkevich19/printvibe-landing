@@ -45,6 +45,15 @@ export function PhoneIcon(props: IconProps) {
   );
 }
 
+export function MailIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="5" width="18" height="14" stroke="currentColor" strokeWidth="2" />
+      <path stroke="currentColor" strokeWidth="2" strokeLinejoin="round" d="m3.5 6 8.5 7 8.5-7" />
+    </svg>
+  );
+}
+
 export function PinIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

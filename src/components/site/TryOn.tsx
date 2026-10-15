@@ -9,10 +9,19 @@ import {
 import { renderMockupPng } from "@/lib/mockup-export";
 import { shareOrder, type ShareResult } from "@/lib/share-order";
 import { onTryOnRequest, type ProductId } from "@/lib/try-on";
+import { zipFiles } from "@/lib/zip";
 import { CropMarks } from "./print-marks";
-import { printNote, products, type PrintSide } from "./try-on/catalog";
+import {
+  defaultPlacement,
+  printNote,
+  products,
+  type Placement,
+  type PrintSide,
+} from "./try-on/catalog";
 import { TryOnControls } from "./try-on/Controls";
 import { Mockup } from "./try-on/Mockup";
+
+const ARCHIVE_NAME = "printvibe-zakaz.zip";
 
 export function TryOn() {
   const [productId, setProductId] = useState<ProductId>("tshirt");
@@ -21,27 +30,27 @@ export function TryOn() {
   const [design, setDesign] = useState<Design | null>(null);
   const [loading, setLoading] = useState(false);
   const [mockup, setMockup] = useState<File | null>(null);
+  const [archive, setArchive] = useState<File | null>(null);
   const [shareStatus, setShareStatus] = useState<ShareResult | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const [x, setX] = useState(10);
-  const [y, setY] = useState(3);
-  const [w, setW] = useState(80);
-  const [h, setH] = useState(80);
   const [error, setError] = useState<string | null>(null);
 
   const product = products.find((item) => item.id === productId) ?? products[0]!;
   const color = product.colors.find((item) => item.id === colorId) ?? product.colors[0];
-  const placement = product.back ? (side === "back" ? "спина" : "грудь") : "";
-  const caption = `${product.name}${color ? `, ${color.name.toLowerCase()}` : ""}${placement ? `, ${placement}` : ""}`;
+  const printSide = product.back ? side : "front";
+  const aspect = design?.preview?.aspect ?? 1;
+  const [placement, setPlacement] = useState<Placement>(() =>
+    defaultPlacement(product, printSide, aspect),
+  );
+  const resetPlacement = () => setPlacement(defaultPlacement(product, printSide, aspect));
+  const where = product.back ? (side === "back" ? "спина" : "грудь") : "";
+  const caption = `${product.name}${color ? `, ${color.name.toLowerCase()}` : ""}${where ? `, ${where}` : ""}`;
 
   useEffect(() => onTryOnRequest(setProductId), []);
+  useEffect(() => setSide("front"), [productId]);
   useEffect(() => {
-    setSide("front");
-    setX(10);
-    setY(productId === "sticker" ? 10 : 3);
-    setW(80);
-    setH(80);
-  }, [productId]);
+    setPlacement(defaultPlacement(product, printSide, aspect));
+  }, [product, printSide, aspect]);
   useEffect(() => () => releaseDesign(design), [design]);
 
   useEffect(() => {
@@ -71,7 +80,21 @@ export function TryOn() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [design, product.id, product.back, side, color, caption, x, y, w, h]);
+  }, [design, product.id, product.back, side, color, caption, placement]);
+
+  useEffect(() => {
+    setArchive(null);
+    if (!design || (design.preview && !mockup)) return;
+    let cancelled = false;
+    zipFiles(mockup ? [design.file, mockup] : [design.file], ARCHIVE_NAME)
+      .then((zip) => {
+        if (!cancelled) setArchive(zip);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [design, mockup]);
 
   const acceptFile = async (file: File) => {
     setError(null);
@@ -89,14 +112,13 @@ export function TryOn() {
   };
 
   const send = () => {
-    if (!design) return;
-    const files = mockup ? [mockup, design.file] : [design.file];
+    if (!design || !archive) return;
     const text = [
       "Здравствуйте! Хочу заказать печать в PrintVibe.",
       `Изделие: ${caption}.`,
-      `Мой макет: ${design.name}${mockup ? ", превью на изделии — во вложении" : ""}.`,
+      `В архиве мой макет «${design.name}»${mockup ? " и превью на изделии" : ""}.`,
     ].join("\n");
-    shareOrder({ files, text, ...(mockup && { download: mockup }) }).then(setShareStatus);
+    void shareOrder({ archive, text }).then(setShareStatus);
   };
 
   return (
@@ -139,27 +161,16 @@ export function TryOn() {
               setError(null);
               setShareStatus(null);
               setMockup(null);
+              setArchive(null);
               setDesign(null);
             }}
-            x={x}
-            y={y}
-            w={w}
-            h={h}
-            onX={setX}
-            onY={setY}
-            onWidth={(value) => {
-              setW(value);
-              setX((left) => Math.min(left, 100 - value));
-            }}
-            onHeight={(value) => {
-              setH(value);
-              setY((top) => Math.min(top, 100 - value));
-            }}
             canPlace={design?.preview != null}
+            onReset={resetPlacement}
             canSend={design !== null}
+            ready={archive !== null}
             onSend={send}
             shareStatus={shareStatus}
-            withPreview={mockup !== null}
+            archiveName={ARCHIVE_NAME}
           />
 
           <div className="order-1 lg:order-2">
@@ -169,7 +180,7 @@ export function TryOn() {
                 {color && ` · ${color.name.toLowerCase()}`}
               </p>
               <p className="eyebrow max-w-[55%] text-right text-ink/60">
-                {printNote(product, product.back ? side : "front")}
+                {printNote(product, printSide)}
               </p>
             </div>
             <div className="relative aspect-square w-full overflow-hidden border-2 border-ink bg-card">
@@ -180,19 +191,12 @@ export function TryOn() {
               <Mockup
                 svgRef={svgRef}
                 product={product}
-                side={product.back ? side : "front"}
+                side={printSide}
                 color={color}
                 design={design?.preview?.url}
-                x={x / 100}
-                y={y / 100}
-                w={w / 100}
-                h={h / 100}
-                onPlace={(nextX, nextY, nextW, nextH) => {
-                  setX(Math.round(nextX * 100));
-                  setY(Math.round(nextY * 100));
-                  setW(Math.round(nextW * 100));
-                  setH(Math.round(nextH * 100));
-                }}
+                aspect={aspect}
+                placement={placement}
+                onPlace={setPlacement}
               />
               <CropMarks className="m-6" />
               {design && !design.preview && (

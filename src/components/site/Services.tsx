@@ -7,8 +7,7 @@ const layout: Record<string, string> = {
   tshirts: "lg:col-span-2 lg:row-span-2",
   hoodies: "",
   mugs: "",
-  stickers: "",
-  photo: "",
+  photo: "lg:col-span-2",
 };
 
 export function Services() {
@@ -106,16 +105,16 @@ function ImageCard({ service, index }: { service: Service; index: number }) {
 
 function PhotoCard({ service, index }: { service: Service; index: number }) {
   return (
-    <article className="flex h-full flex-col overflow-hidden border-2 border-ink bg-card">
+    <article className="group flex h-full flex-col overflow-hidden border-2 border-ink bg-card transition-[transform,box-shadow] duration-300 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--violet)]">
       <div
         aria-hidden
-        className="relative grid aspect-[4/3] place-items-center overflow-hidden border-b-2 border-ink bg-violet"
+        className="relative grid aspect-[4/3] place-items-center overflow-hidden border-b-2 border-ink bg-violet lg:aspect-[8/3]"
       >
         <div className="halftone absolute inset-0 text-white/20" />
         {[-10, 4, -2].map((deg, i) => (
           <span
             key={deg}
-            className="absolute aspect-[3/4] w-[38%] bg-white p-1.5 pb-6 shadow-lg"
+            className="absolute aspect-[3/4] w-[38%] bg-white p-1.5 pb-6 shadow-lg transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-105 lg:w-[19%]"
             style={{ rotate: `${deg}deg`, translate: `${(i - 1) * 22}% ${i * 4}%` }}
           >
             <span

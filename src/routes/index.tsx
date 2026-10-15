@@ -13,9 +13,9 @@ import { Contacts } from "@/components/site/Contacts";
 import { Footer } from "@/components/site/Footer";
 import { MobileBar } from "@/components/site/MobileBar";
 
-const title = "Печать на футболках, кружках и наклейках в Гомеле — PrintVibe";
+const title = "Печать на футболках, худи и кружках в Гомеле — PrintVibe";
 const description =
-  "Салон печати PrintVibe в Гомеле, ул. Ефремова, 16: печать на футболках, худи, кружках, наклейках и печать фото с вашим дизайном. Поможем с макетом. Пн–Пт 10–18, Сб 10–14.";
+  "Салон печати PrintVibe в Гомеле, ул. Ефремова, 16: печать на футболках, худи, кружках и печать фото с вашим дизайном. Поможем с макетом. Пн–Пт 10–18, Сб 10–14.";
 
 export const Route = createFileRoute("/")({
   head: () => ({

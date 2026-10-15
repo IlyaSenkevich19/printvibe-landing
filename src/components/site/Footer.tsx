@@ -14,7 +14,7 @@ export function Footer() {
               Print<span className="text-orange">Vibe</span>
             </p>
             <p className="mt-3 max-w-sm">
-              Салон печати в Гомеле: одежда, кружки, наклейки и фото с вашим дизайном.
+              Салон печати в Гомеле: одежда, кружки и фото с вашим дизайном.
             </p>
           </div>
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
@@ -41,6 +41,11 @@ export function Footer() {
             <li>
               <a href={business.phone.href} className="hover:text-orange">
                 {business.phone.display}
+              </a>
+            </li>
+            <li>
+              <a href={business.email.href} className="hover:text-orange">
+                {business.email.address}
               </a>
             </li>
           </ul>

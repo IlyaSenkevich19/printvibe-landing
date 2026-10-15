@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { business, hours, mapLinks } from "@/content/business";
 import { useOpenStatus } from "@/lib/open-status";
-import { InstagramIcon, PhoneIcon, PinIcon, TelegramIcon } from "./icons";
+import { InstagramIcon, MailIcon, PhoneIcon, PinIcon, TelegramIcon } from "./icons";
 import { CropMarks } from "./print-marks";
 
 export function Contacts() {
@@ -53,6 +53,11 @@ export function Contacts() {
                     external
                   >
                     {business.instagram.handle}
+                  </ContactLink>
+                </li>
+                <li>
+                  <ContactLink href={business.email.href} icon={<MailIcon />} label="Почта">
+                    <span className="break-all">{business.email.address}</span>
                   </ContactLink>
                 </li>
               </ul>

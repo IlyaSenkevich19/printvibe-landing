@@ -54,8 +54,8 @@ export function Hero() {
           </h1>
 
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-ink/80 md:text-xl">
-            Футболки, худи, кружки, наклейки и фото с вашим логотипом, надписью или фотографией. Нет
-            макета — поможем его сделать.
+            Футболки, худи, кружки и фото с вашим логотипом, надписью или фотографией. Нет макета —
+            поможем его сделать.
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
@@ -131,16 +131,19 @@ function HeroSheets() {
         </figure>
 
         <figure
-          className="print-in absolute bottom-0 left-0 w-[44%] rotate-[-9deg] rounded-[1.4rem] bg-white p-2 shadow-[0_20px_40px_-20px_rgb(30_20_50/0.5)]"
+          className="print-in absolute bottom-0 left-0 w-[44%] rotate-[-9deg] bg-card p-2.5 pb-9 shadow-[0_20px_40px_-20px_rgb(30_20_50/0.5)]"
           style={{ "--d": "1000ms" } as CSSProperties}
         >
           <WorkPhoto
-            image={workImages.stickers}
+            image={workImages.hoodie}
             alt=""
             sizes="(min-width: 1024px) 240px, 44vw"
             loading="eager"
-            className="aspect-square w-full rounded-[1rem] object-cover"
+            className="aspect-square w-full object-cover"
           />
+          <figcaption className="eyebrow absolute bottom-2.5 left-3 text-[0.65rem] text-ink/60">
+            02 · худи
+          </figcaption>
         </figure>
 
         <Stamp className="absolute right-[4%] -bottom-4 size-28 md:size-32" />

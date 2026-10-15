@@ -1,7 +1,7 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { business } from "@/content/business";
 import type { ProductId } from "@/lib/try-on";
-import { browserCanShareFiles, type ShareResult } from "@/lib/share-order";
+import { browserCanShareArchive, type ShareResult } from "@/lib/share-order";
 import { TelegramIcon } from "../icons";
 import { Uploader } from "../Uploader";
 import type { Fabric, PrintSide, Product } from "./catalog";
@@ -22,19 +22,13 @@ export function TryOnControls({
   error,
   onFile,
   onClear,
-  x,
-  y,
-  w,
-  h,
-  onX,
-  onY,
-  onWidth,
-  onHeight,
   canPlace,
+  onReset,
   canSend,
+  ready,
   onSend,
   shareStatus,
-  withPreview,
+  archiveName,
 }: {
   products: Product[];
   product: Product;
@@ -51,29 +45,23 @@ export function TryOnControls({
   error: string | null;
   onFile: (file: File) => void;
   onClear: () => void;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  onX: (value: number) => void;
-  onY: (value: number) => void;
-  onWidth: (value: number) => void;
-  onHeight: (value: number) => void;
   canPlace: boolean;
+  onReset: () => void;
   canSend: boolean;
+  ready: boolean;
   onSend: () => void;
   shareStatus: ShareResult | null;
-  withPreview: boolean;
+  archiveName: string;
 }) {
   const [sharesFiles, setSharesFiles] = useState<boolean | null>(null);
   useEffect(() => {
-    setSharesFiles(browserCanShareFiles());
+    setSharesFiles(browserCanShareArchive());
   }, []);
 
   return (
     <div className="order-2 space-y-8 lg:order-1">
       <Field legend="Изделие">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-3 gap-2">
           {products.map((item) => (
             <label
               key={item.id}
@@ -163,33 +151,20 @@ export function TryOnControls({
       </Field>
 
       {canPlace && (
-        <>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <Range label="Ширина" value={w} min={20} max={100} onChange={onWidth} />
-            <Range label="Высота" value={h} min={20} max={100} onChange={onHeight} />
-            <Range
-              label="Слева"
-              value={x}
-              min={0}
-              max={Math.max(0, 100 - w)}
-              disabled={w === 100}
-              onChange={onX}
-            />
-            <Range
-              label="Сверху"
-              value={y}
-              min={0}
-              max={Math.max(0, 100 - h)}
-              disabled={h === 100}
-              onChange={onY}
-            />
-          </div>
-          <p className="text-sm text-ink/60">
-            {w === 100 && h === 100
-              ? "Принт на всю зону. Потяните уголок внутрь, чтобы уменьшить."
-              : "Потяните принт, чтобы сдвинуть. Уголок меняет ширину и высоту, противоположный остаётся на месте."}
+        <div className="flex flex-col items-start gap-2 border-l-4 border-violet bg-card px-4 py-3 text-sm">
+          <p>
+            Двигайте принт прямо на {product.id === "mug" ? "кружке" : "изделии"}. Тяните за уголок
+            — размер меняется, пропорции картинки сохраняются.
+            {product.id !== "mug" && " Растянуть можно до рукавов."}
           </p>
-        </>
+          <button
+            type="button"
+            onClick={onReset}
+            className="font-semibold text-violet underline-offset-4 hover:underline"
+          >
+            Вернуть как было
+          </button>
+        </div>
       )}
 
       <div className="border-t border-ink/15 pt-6">
@@ -197,11 +172,15 @@ export function TryOnControls({
           <button
             type="button"
             onClick={onSend}
-            disabled={busy}
-            className="btn btn-primary w-full disabled:opacity-60 sm:w-auto"
+            disabled={busy || !ready}
+            className="btn btn-primary w-full disabled:cursor-wait disabled:opacity-60 sm:w-auto"
           >
             <TelegramIcon />
-            {sharesFiles ? "Отправить макет в Telegram" : "Открыть Telegram с заказом"}
+            {!ready
+              ? "Готовим файл…"
+              : sharesFiles
+                ? "Отправить файлом в Telegram"
+                : "Открыть Telegram с заказом"}
           </button>
         ) : (
           <a
@@ -214,11 +193,12 @@ export function TryOnControls({
             Написать в Telegram
           </a>
         )}
-        <ShareStatus status={shareStatus} fileName={fileName} withPreview={withPreview} />
-        {canSend && sharesFiles === false && shareStatus !== "fallback" && (
+        <ShareStatus status={shareStatus} archiveName={archiveName} />
+        {canSend && shareStatus !== "fallback" && (
           <p className="mt-4 text-sm text-ink/60">
-            Браузер скачает превью и откроет чат. Файл и превью нужно прикрепить к сообщению
-            вручную.
+            {sharesFiles
+              ? `Макет и превью уйдут одним архивом ${archiveName} — Telegram отправит его файлом, без сжатия.`
+              : `Браузер скачает архив ${archiveName} с макетом и превью и откроет чат. Прикрепите архив к сообщению — он уйдёт файлом, без сжатия.`}
           </p>
         )}
         <p className="mt-4 text-sm text-ink/60">
@@ -229,23 +209,12 @@ export function TryOnControls({
   );
 }
 
-function ShareStatus({
-  status,
-  fileName,
-  withPreview,
-}: {
-  status: ShareResult | null;
-  fileName: string | undefined;
-  withPreview: boolean;
-}) {
+function ShareStatus({ status, archiveName }: { status: ShareResult | null; archiveName: string }) {
   if (status !== "fallback") return null;
-  const file = fileName ? `ваш файл «${fileName}»` : "ваш файл";
   return (
     <p role="status" className="mt-4 border-l-4 border-violet bg-card px-4 py-3 text-sm">
-      Открыли чат в Telegram и скопировали текст заказа.{" "}
-      {withPreview
-        ? `Превью на изделии скачалось — прикрепите его и ${file} к сообщению и вставьте текст.`
-        : `Прикрепите ${file} к сообщению и вставьте текст.`}
+      Открыли чат в Telegram и скопировали текст заказа. Архив {archiveName} скачался — прикрепите
+      его к сообщению (скрепка → «Файл») и вставьте текст.
     </p>
   );
 }
@@ -256,41 +225,5 @@ function Field({ legend, children }: { legend: string; children: ReactNode }) {
       <legend className="eyebrow mb-3 text-ink/60">{legend}</legend>
       {children}
     </fieldset>
-  );
-}
-
-function Range({
-  label,
-  value,
-  min,
-  max,
-  disabled = false,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  disabled?: boolean;
-  onChange: (value: number) => void;
-}) {
-  const id = useId();
-  return (
-    <div>
-      <label htmlFor={id} className="eyebrow flex justify-between text-ink/60">
-        {label}
-        <span className="text-ink">{value}%</span>
-      </label>
-      <input
-        id={id}
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1 h-11 w-full cursor-pointer accent-violet disabled:cursor-default disabled:opacity-40"
-      />
-    </div>
   );
 }

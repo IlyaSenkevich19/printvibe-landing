@@ -1,4 +1,4 @@
-export type ProductId = "tshirt" | "hoodie" | "mug" | "sticker";
+export type ProductId = "tshirt" | "hoodie" | "mug";
 
 const EVENT = "printvibe:try-on";
 

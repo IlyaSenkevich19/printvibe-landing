@@ -17,13 +17,19 @@ const mugColors: Fabric[] = [
 
 export type Area = { x: number; y: number; w: number; h: number };
 
+/** Print position in mockup units (the SVG is 500×500). Height follows from the image proportions. */
+export type Placement = { x: number; y: number; w: number };
+
 export type PrintSide = "front" | "back";
 
 export type Product = {
   id: ProductId;
   name: string;
   colors: Fabric[];
+  /** Where the print starts. */
   area: Area;
+  /** How far the print may grow: sleeve to sleeve on clothes, the whole wrap on a mug. */
+  canvas: Area;
   note: string;
   back?: { area: Area; note: string };
 };
@@ -36,12 +42,21 @@ export function printNote(product: Product, side: PrintSide): string {
   return side === "back" && product.back ? product.back.note : product.note;
 }
 
+export const MIN_PRINT_WIDTH = 30;
+
+export function defaultPlacement(product: Product, side: PrintSide, aspect: number): Placement {
+  const area = printArea(product, side);
+  const w = Math.min(area.w * 0.8, area.h * 0.8 * aspect);
+  return { x: area.x + (area.w - w) / 2, y: area.y + area.h * 0.03, w };
+}
+
 export const products: Product[] = [
   {
     id: "tshirt",
     name: "Футболка",
     colors: fabrics,
     area: { x: 170, y: 128, w: 160, h: 200 },
+    canvas: { x: 35, y: 45, w: 430, h: 423 },
     note: "Принт на груди",
     back: { area: { x: 140, y: 118, w: 220, h: 250 }, note: "Принт на спине" },
   },
@@ -50,6 +65,7 @@ export const products: Product[] = [
     name: "Худи",
     colors: fabrics,
     area: { x: 178, y: 150, w: 144, h: 150 },
+    canvas: { x: 42, y: 48, w: 416, h: 418 },
     note: "Принт на груди, над карманом",
     back: { area: { x: 150, y: 125, w: 200, h: 230 }, note: "Принт на спине" },
   },
@@ -58,13 +74,7 @@ export const products: Product[] = [
     name: "Кружка",
     colors: mugColors,
     area: { x: 138, y: 150, w: 184, h: 210 },
+    canvas: { x: 110, y: 110, w: 240, h: 302 },
     note: "Печать по кругу кружки",
-  },
-  {
-    id: "sticker",
-    name: "Наклейка",
-    colors: [],
-    area: { x: 120, y: 110, w: 260, h: 260 },
-    note: "Вырубная наклейка с белой каймой",
   },
 ];

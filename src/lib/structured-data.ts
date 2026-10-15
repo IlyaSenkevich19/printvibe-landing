@@ -10,11 +10,12 @@ export function localBusinessSchema() {
     name: business.title,
     alternateName: business.name,
     description:
-      "Салон печати в Гомеле: печать на футболках, худи и свитшотах, кружках, наклейках и печать фотографий с вашим дизайном.",
+      "Салон печати в Гомеле: печать на футболках, худи и свитшотах, кружках и печать фотографий с вашим дизайном.",
     url: `${SITE_URL}/`,
     logo: `${SITE_URL}/og-image.jpg`,
     image: `${SITE_URL}/og-image.jpg`,
     telephone: business.phone.e164,
+    email: business.email.address,
     ...(business.legal.name && { legalName: business.legal.name }),
     ...(business.legal.unp && { taxID: business.legal.unp }),
     address: {
@@ -44,6 +45,7 @@ export function localBusinessSchema() {
     contactPoint: {
       "@type": "ContactPoint",
       telephone: business.phone.e164,
+      email: business.email.address,
       contactType: "customer service",
       availableLanguage: ["ru", "be"],
     },

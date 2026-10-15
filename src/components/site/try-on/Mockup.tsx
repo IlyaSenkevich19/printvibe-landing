@@ -3,37 +3,52 @@ import {
   useId,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type RefObject,
 } from "react";
 import {
-  printArea,
+  MIN_PRINT_WIDTH,
   printNote,
   type Area,
   type Fabric,
+  type Placement,
   type PrintSide,
   type Product,
 } from "./catalog";
 
-function placeBox(area: Area, x: number, y: number, w: number, h: number): Area {
-  return {
-    x: area.x + area.w * x,
-    y: area.y + area.h * y,
-    w: area.w * w,
-    h: area.h * h,
-  };
-}
-
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-
-const MIN_FRACTION = 0.2;
 
 type Corner = "nw" | "ne" | "sw" | "se";
 
 type Gesture =
-  | { kind: "move"; id: number; sx: number; sy: number; x: number; y: number; w: number; h: number }
+  | { kind: "move"; id: number; sx: number; sy: number; start: Placement }
   | { kind: "resize"; id: number; corner: Corner; opposite: { x: number; y: number } };
+
+function toBox(placement: Placement, aspect: number): Area {
+  return { x: placement.x, y: placement.y, w: placement.w, h: placement.w / aspect };
+}
+
+/** Largest width that fits the canvas: the print can reach from sleeve to sleeve, never past. */
+function maxWidth(canvas: Area, aspect: number) {
+  return Math.min(canvas.w, canvas.h * aspect);
+}
+
+/** Keeps the whole print inside the canvas. */
+function fitPlacement(placement: Placement, canvas: Area, aspect: number): Placement {
+  const w = clamp(
+    placement.w,
+    Math.min(MIN_PRINT_WIDTH, maxWidth(canvas, aspect)),
+    maxWidth(canvas, aspect),
+  );
+  const h = w / aspect;
+  return {
+    x: clamp(placement.x, canvas.x, canvas.x + canvas.w - w),
+    y: clamp(placement.y, canvas.y, canvas.y + canvas.h - h),
+    w,
+  };
+}
 
 function oppositeCorner(corner: Corner, box: Area) {
   if (corner === "nw") return { x: box.x + box.w, y: box.y + box.h };
@@ -42,65 +57,33 @@ function oppositeCorner(corner: Corner, box: Area) {
   return { x: box.x, y: box.y };
 }
 
-function clientToUser(svg: SVGSVGElement, clientX: number, clientY: number, rotate: boolean) {
+function clientToUser(svg: SVGSVGElement, clientX: number, clientY: number) {
   const rect = svg.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) return null;
-  let x = ((clientX - rect.left) / rect.width) * 500;
-  let y = ((clientY - rect.top) / rect.height) * 500;
-  if (rotate) {
-    const cos = Math.cos((-6 * Math.PI) / 180);
-    const sin = Math.sin((-6 * Math.PI) / 180);
-    const dx = x - 250;
-    const dy = y - 250;
-    x = 250 + dx * cos - dy * sin;
-    y = 250 + dx * sin + dy * cos;
-  }
-  return { x, y };
+  return {
+    x: ((clientX - rect.left) / rect.width) * 500,
+    y: ((clientY - rect.top) / rect.height) * 500,
+  };
 }
 
-function resizeBox(
+/** Uniform resize: the opposite corner stays put and the proportions never change. */
+function resizeFromCorner(
   corner: Corner,
   opposite: { x: number; y: number },
   pointer: { x: number; y: number },
-  area: Area,
-) {
-  const minW = area.w * MIN_FRACTION;
-  const minH = area.h * MIN_FRACTION;
-  const rightEdge = area.x + area.w;
-  const bottomEdge = area.y + area.h;
-  let left = area.x;
-  let right = rightEdge;
-  let top = area.y;
-  let bottom = bottomEdge;
-
-  if (corner === "se") {
-    left = opposite.x;
-    top = opposite.y;
-    right = clamp(pointer.x, left + minW, rightEdge);
-    bottom = clamp(pointer.y, top + minH, bottomEdge);
-  } else if (corner === "nw") {
-    right = opposite.x;
-    bottom = opposite.y;
-    left = clamp(pointer.x, area.x, right - minW);
-    top = clamp(pointer.y, area.y, bottom - minH);
-  } else if (corner === "ne") {
-    left = opposite.x;
-    bottom = opposite.y;
-    right = clamp(pointer.x, left + minW, rightEdge);
-    top = clamp(pointer.y, area.y, bottom - minH);
-  } else {
-    right = opposite.x;
-    top = opposite.y;
-    left = clamp(pointer.x, area.x, right - minW);
-    bottom = clamp(pointer.y, top + minH, bottomEdge);
-  }
-
-  return {
-    x: (left - area.x) / area.w,
-    y: (top - area.y) / area.h,
-    w: (right - left) / area.w,
-    h: (bottom - top) / area.h,
-  };
+  canvas: Area,
+  aspect: number,
+): Placement {
+  const right = corner === "ne" || corner === "se";
+  const down = corner === "sw" || corner === "se";
+  const dx = right ? pointer.x - opposite.x : opposite.x - pointer.x;
+  const dy = down ? pointer.y - opposite.y : opposite.y - pointer.y;
+  const roomX = right ? canvas.x + canvas.w - opposite.x : opposite.x - canvas.x;
+  const roomY = down ? canvas.y + canvas.h - opposite.y : opposite.y - canvas.y;
+  const limit = Math.min(roomX, roomY * aspect);
+  const w = clamp(Math.max(dx, dy * aspect), Math.min(MIN_PRINT_WIDTH, limit), limit);
+  const h = w / aspect;
+  return { x: right ? opposite.x : opposite.x - w, y: down ? opposite.y : opposite.y - h, w };
 }
 
 function Print({
@@ -109,25 +92,42 @@ function Print({
   blend,
   canDrag,
   grabbing,
+  label,
   onPointerDown,
+  onKeyDown,
 }: {
   url: string | undefined;
   box: Area;
   blend: "multiply" | "normal";
   canDrag: boolean;
   grabbing: boolean;
+  label: string;
   onPointerDown: (event: ReactPointerEvent<SVGGElement>) => void;
+  onKeyDown: (event: ReactKeyboardEvent<SVGGElement>) => void;
 }) {
   return (
     <g
+      {...(canDrag && { tabIndex: 0, role: "button", "aria-label": label })}
+      className="outline-none focus-visible:[&>rect]:stroke-violet"
       style={{
         cursor: canDrag ? (grabbing ? "grabbing" : "grab") : undefined,
-        touchAction: "none",
+        touchAction: canDrag ? "none" : undefined,
       }}
       onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
     >
       <DesignLayer url={url} box={box} blend={blend} />
-      {canDrag && <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="transparent" />}
+      {canDrag && (
+        <rect
+          x={box.x}
+          y={box.y}
+          width={box.w}
+          height={box.h}
+          fill="transparent"
+          strokeWidth={3}
+          data-export="hide"
+        />
+      )}
     </g>
   );
 }
@@ -156,7 +156,7 @@ function DesignLayer({
       y={box.y}
       width={box.w}
       height={box.h}
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       style={{ mixBlendMode: blend }}
     />
   );
@@ -310,10 +310,8 @@ export function Mockup({
   side,
   color,
   design,
-  x,
-  y,
-  w,
-  h,
+  aspect,
+  placement,
   onPlace,
 }: {
   svgRef: RefObject<SVGSVGElement | null>;
@@ -321,54 +319,40 @@ export function Mockup({
   side: PrintSide;
   color: Fabric | undefined;
   design: string | undefined;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  onPlace: (x: number, y: number, w: number, h: number) => void;
+  aspect: number;
+  placement: Placement;
+  onPlace: (placement: Placement) => void;
 }) {
   const uid = useId().replace(/:/g, "");
-  const area = printArea(product, side);
-  const box = placeBox(area, x, y, w, h);
+  const box = toBox(placement, aspect);
   const fill = color?.fill ?? "#fff";
   const light = color?.light ?? true;
   const blend = product.id === "mug" && light ? "multiply" : "normal";
   const stroke = light ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.14)";
-  const rotate = product.id === "sticker";
-  const canDrag = Boolean(design) && (w < 0.999 || h < 0.999);
+  const canDrag = Boolean(design);
   const gesture = useRef<Gesture | null>(null);
   const [grabbing, setGrabbing] = useState(false);
-  const placeRef = useRef(onPlace);
-  const areaRef = useRef(area);
-  const applyRef = useRef<(event: { clientX: number; clientY: number }) => void>(() => {});
-  placeRef.current = onPlace;
-  areaRef.current = area;
-
-  const applyGesture = (event: { clientX: number; clientY: number }) => {
-    const current = gesture.current;
-    const svg = svgRef.current;
-    if (!current || !svg) return;
-    const pointer = clientToUser(svg, event.clientX, event.clientY, rotate);
-    if (!pointer) return;
-    const printAreaNow = areaRef.current;
-    if (current.kind === "move") {
-      placeRef.current(
-        clamp(current.x + (pointer.x - current.sx) / printAreaNow.w, 0, 1 - current.w),
-        clamp(current.y + (pointer.y - current.sy) / printAreaNow.h, 0, 1 - current.h),
-        current.w,
-        current.h,
-      );
-      return;
-    }
-    const next = resizeBox(current.corner, current.opposite, pointer, printAreaNow);
-    placeRef.current(next.x, next.y, next.w, next.h);
-  };
-  applyRef.current = applyGesture;
+  const latest = useRef({ onPlace, canvas: product.canvas, aspect });
+  latest.current = { onPlace, canvas: product.canvas, aspect };
 
   useEffect(() => {
     const move = (event: PointerEvent) => {
-      if (!gesture.current || event.pointerId !== gesture.current.id) return;
-      applyRef.current(event);
+      const current = gesture.current;
+      const svg = svgRef.current;
+      if (!current || event.pointerId !== current.id || !svg) return;
+      const pointer = clientToUser(svg, event.clientX, event.clientY);
+      if (!pointer) return;
+      const { onPlace: place, canvas, aspect: ratio } = latest.current;
+      if (current.kind === "move") {
+        const next = {
+          x: current.start.x + pointer.x - current.sx,
+          y: current.start.y + pointer.y - current.sy,
+          w: current.start.w,
+        };
+        place(fitPlacement(next, canvas, ratio));
+        return;
+      }
+      place(resizeFromCorner(current.corner, current.opposite, pointer, canvas, ratio));
     };
     const up = (event: PointerEvent) => {
       if (!gesture.current || event.pointerId !== gesture.current.id) return;
@@ -383,7 +367,7 @@ export function Mockup({
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
     };
-  }, []);
+  }, [svgRef]);
 
   const capture = (event: ReactPointerEvent<SVGGElement>) => {
     event.preventDefault();
@@ -401,7 +385,7 @@ export function Mockup({
     if (!canDrag) return;
     const svg = svgRef.current;
     if (!svg) return;
-    const pointer = clientToUser(svg, event.clientX, event.clientY, rotate);
+    const pointer = clientToUser(svg, event.clientX, event.clientY);
     if (!pointer) return;
     capture(event);
     gesture.current = {
@@ -409,10 +393,7 @@ export function Mockup({
       id: event.pointerId,
       sx: pointer.x,
       sy: pointer.y,
-      x,
-      y,
-      w,
-      h,
+      start: placement,
     };
     setGrabbing(true);
   };
@@ -427,6 +408,32 @@ export function Mockup({
     };
   };
 
+  const onKeyDown = (event: ReactKeyboardEvent<SVGGElement>) => {
+    const step = event.shiftKey ? 20 : 5;
+    const moves: Record<string, [number, number]> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step],
+    };
+    const shift = moves[event.key];
+    let next: Placement | null = null;
+    if (shift) {
+      next = { ...placement, x: placement.x + shift[0], y: placement.y + shift[1] };
+    } else if (event.key === "+" || event.key === "=" || event.key === "-") {
+      const w = placement.w + (event.key === "-" ? -step : step);
+      next = {
+        x: placement.x + (placement.w - w) / 2,
+        y: placement.y + (placement.w - w) / aspect / 2,
+        w,
+      };
+    }
+    if (!next) return;
+    event.preventDefault();
+    onPlace(fitPlacement(next, product.canvas, aspect));
+  };
+
+  const where = `${product.name.toLowerCase()}, ${printNote(product, side).toLowerCase()}, цвет ${color?.name.toLowerCase()}`;
   const print = (
     <Print
       url={design}
@@ -434,21 +441,18 @@ export function Mockup({
       blend={blend}
       canDrag={canDrag}
       grabbing={grabbing}
+      label="Ваш принт. Стрелки двигают, плюс и минус меняют размер."
       onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
     />
   );
-
-  const label =
-    product.id === "sticker"
-      ? "Превью наклейки с вашим дизайном. Принт можно перетащить и изменить размер за углы."
-      : `Превью: ${product.name.toLowerCase()}, ${printNote(product, side).toLowerCase()}, цвет ${color?.name.toLowerCase()}. Принт можно перетащить и изменить размер за углы.`;
 
   return (
     <svg
       ref={svgRef}
       viewBox="0 0 500 500"
-      role="img"
-      aria-label={label}
+      role="group"
+      aria-label={`Превью: ${where}. Принт можно перетащить и изменить размер за углы.`}
       className="relative size-full transition-[filter] duration-300"
     >
       <defs>
@@ -470,16 +474,6 @@ export function Mockup({
           height="500"
         >
           <feGaussianBlur stdDeviation="10" />
-        </filter>
-        <filter id={`${uid}-diecut`} x="-20%" y="-20%" width="140%" height="140%">
-          <feMorphology in="SourceAlpha" operator="dilate" radius="9" result="spread" />
-          <feFlood floodColor="#fff" />
-          <feComposite in2="spread" operator="in" result="outline" />
-          <feDropShadow dx="0" dy="6" stdDeviation="6" floodOpacity="0.25" />
-          <feMerge>
-            <feMergeNode />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
         </filter>
         <linearGradient id={`${uid}-side`} x1="0" x2="1">
           <stop offset="0" stopColor="#000" stopOpacity="0.28" />
@@ -559,26 +553,16 @@ export function Mockup({
         </g>
       )}
 
-      {product.id === "sticker" && (
-        <g transform="rotate(-6 250 250)" filter={`url(#${uid}-diecut)`}>
-          {print}
-        </g>
-      )}
-
-      {design && (
-        <Selection box={box} rotate={product.id === "sticker"} onResizeDown={onResizeDown} />
-      )}
+      {design && <Selection box={box} onResizeDown={onResizeDown} />}
     </svg>
   );
 }
 
 function Selection({
   box,
-  rotate,
   onResizeDown,
 }: {
   box: Area;
-  rotate: boolean;
   onResizeDown: (corner: Corner, event: ReactPointerEvent<SVGGElement>) => void;
 }) {
   const corners = [
@@ -589,7 +573,7 @@ function Selection({
   ] as const;
 
   return (
-    <g data-export="hide" transform={rotate ? "rotate(-6 250 250)" : undefined}>
+    <g data-export="hide">
       <rect
         x={box.x}
         y={box.y}

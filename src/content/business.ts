@@ -15,6 +15,7 @@ export const business = {
   phone: { display: "+375 25 783-86-28", href: "tel:+375257838628", e164: "+375257838628" },
   telegram: { handle: "@ilw_dtl", url: "https://t.me/ilw_dtl" },
   instagram: { handle: "@printvibe.by", url: "https://www.instagram.com/printvibe.by/" },
+  email: { address: "printvibe.by@gmail.com", href: "mailto:printvibe.by@gmail.com" },
   address: {
     street: "ул. М. Г. Ефремова, 16",
     floor: "2 этаж",
@@ -94,15 +95,6 @@ export const services: Service[] = [
     tryOn: "mug",
   },
   {
-    id: "stickers",
-    title: "Наклейки",
-    text: "Стикеры по вашему макету — для ноутбука, упаковки, товаров или фирменного стиля.",
-    uses: ["упаковка", "бренд", "стикерпак"],
-    image: workImages.stickers,
-    imageAlt: "Набор цветных наклеек разной формы",
-    tryOn: "sticker",
-  },
-  {
     id: "photo",
     title: "Печать фото",
     text: "Печать фотографий с телефона или флешки — для альбома, рамки или подарка.",
@@ -132,7 +124,7 @@ export const steps = [
 export const faq = [
   {
     q: "Что можно напечатать в PrintVibe?",
-    a: "Футболки, худи и свитшоты, кружки, наклейки и фотографии — с вашим логотипом, надписью, фото или рисунком.",
+    a: "Футболки, худи и свитшоты, кружки и фотографии — с вашим логотипом, надписью, фото или рисунком.",
   },
   {
     q: "Где находится салон печати?",
@@ -144,7 +136,7 @@ export const faq = [
   },
   {
     q: "Как сделать заказ?",
-    a: `Напишите в Telegram ${business.telegram.handle}, позвоните по номеру ${business.phone.display} или напишите в Instagram ${business.instagram.handle}. Пришлите идею или готовый макет — согласуем детали и стоимость.`,
+    a: `Напишите в Telegram ${business.telegram.handle}, позвоните по номеру ${business.phone.display}, напишите в Instagram ${business.instagram.handle} или на почту ${business.email.address}. Пришлите идею или готовый макет — согласуем детали и стоимость.`,
   },
   {
     q: "У меня нет готового макета. Что делать?",

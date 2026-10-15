@@ -6,10 +6,6 @@ import mug from "./work-mug.jpg";
 import mug480 from "./work-mug-480.webp";
 import mug640 from "./work-mug-640.webp";
 import mug816 from "./work-mug.webp";
-import stickers from "./work-stickers.jpg";
-import stickers480 from "./work-stickers-480.webp";
-import stickers640 from "./work-stickers-640.webp";
-import stickers816 from "./work-stickers.webp";
 import tshirt from "./work-tshirt.jpg";
 import tshirt480 from "./work-tshirt-480.webp";
 import tshirt640 from "./work-tshirt-640.webp";
@@ -35,5 +31,4 @@ export const workImages = {
   tshirt: image(tshirt, tshirt480, tshirt640, tshirt816),
   hoodie: image(hoodie, hoodie480, hoodie640, hoodie816),
   mug: image(mug, mug480, mug640, mug816),
-  stickers: image(stickers, stickers480, stickers640, stickers816),
 };
