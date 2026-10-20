@@ -7,10 +7,9 @@ export const SITE_URL = "https://printvibe.by";
 export const business = {
   name: "PrintVibe",
   title: "Салон печати PrintVibe",
-  // Belarusian law requires the seller to be identifiable on the site: fill both before going live.
   legal: {
-    name: "" as string,
-    unp: "" as string,
+    name: "Частное унитарное предприятие по оказанию услуг «Мастер Граф»",
+    unp: "490575353",
   },
   phone: { display: "+375 25 783-86-28", href: "tel:+375257838628", e164: "+375257838628" },
   telegram: { handle: "@ilw_dtl", url: "https://t.me/ilw_dtl" },

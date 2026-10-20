@@ -22,7 +22,7 @@ export const Route = createFileRoute("/privacy")({
   component: Privacy,
 });
 
-const revision = "6 октября 2026 г.";
+const revision = "20 октября 2026 г.";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
