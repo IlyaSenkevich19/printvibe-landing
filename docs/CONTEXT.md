@@ -41,7 +41,7 @@ yarn dev         # http://localhost:8080/
 
 ## Стек
 
-TanStack Start (SSR) + TanStack Router (file routes, `routeTree.gen.ts` генерится dev-сервером) + React 19 + Tailwind CSS v4 + Vite 8. Плагины собраны в `vite.config.ts`. Обычная сборка — Nitro `node-server`. Превью без своего домена — GitHub Pages: workflow `.github/workflows/pages.yml` при `GITHUB_PAGES=true` пререндерит `/` и `/privacy` в статику и публикует ветку `main` на `https://ilyasenkevich19.github.io/printvibe-landing/`. Типы и линтер на GitHub не гоняются. Страница 404 на Pages — отдельный статический `static/404.html` без React (workflow подставляет `%BASE%`): копия `index.html` в роли 404 роняет роутер (`Invariant failed`) и показывает пустую страницу. Внешне она повторяет `NotFoundComponent` из `__root.tsx`, менять их вместе.
+TanStack Start (SSR) + TanStack Router (file routes, `routeTree.gen.ts` генерится dev-сервером) + React 19 + Tailwind CSS v4 + Vite 8. Плагины собраны в `vite.config.ts`. Обычная сборка — Nitro `node-server`. Продакшен — статика на hoster.by (`https://printvibe.by/`): workflow `.github/workflows/deploy.yml` при `GITHUB_PAGES=true` и `PAGES_BASE=/` пререндерит `/` и `/privacy` и заливает `dist/client/` по FTP. Секреты: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` (см. `docs/DOMAIN.md`). Типы и линтер на GitHub не гоняются. Страница 404 — `static/404.html` без React (workflow подставляет `%BASE%`): копия `index.html` в роли 404 роняет роутер. Внешне она повторяет `NotFoundComponent` из `__root.tsx`, менять их вместе.
 
 Офлайн: шаблон `src/service-worker.js`, плагин `serviceWorker()` в `vite.config.ts` при сборке вписывает в него список всех файлов из `assets/` (кроме `heic-to`), шрифты и favicon, и выпускает `sw.js`. Регистрация в `src/lib/offline.ts`, только в production; в dev старый worker снимается. Страницы — сначала сеть (3,5 с), иначе сохранённая копия; файлы сборки — из кэша. Каждая сборка с новыми файлами — новая версия кэша, старая удаляется.
 
@@ -106,7 +106,7 @@ public/                     — robots.txt, sitemap.xml, llms.txt, og-image.jpg,
 - JSON-LD в `head().meta` через `{ "script:ld+json": ... }` (TanStack). Дочерний route перекрывает `title` и `meta` корня; `links` **не дедуплицируются** → canonical только в дочерних роутах.
 - `robots.txt` явно разрешает Яндекс, Google, GPTBot, OAI-SearchBot, PerplexityBot, ClaudeBot, Google-Extended.
 - `llms.txt` — выжимка о бизнесе для AI-поиска. FAQ с FAQPage-разметкой — главный GEO-актив; ответы только из подтверждённых фактов.
-- `SITE_URL = https://printvibe.by` — **домен не подтверждён** (сейчас не резолвится). При смене обновить `business.ts`, `robots.txt`, `sitemap.xml`, `llms.txt`.
+- `SITE_URL = https://printvibe.by` — продакшен на hoster.by. При смене домена обновить `business.ts`, `robots.txt`, `sitemap.xml`, `llms.txt`.
 
 ## Юридическое (Беларусь)
 

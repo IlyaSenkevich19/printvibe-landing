@@ -7,7 +7,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { defineConfig, type Plugin } from "vite";
 
 const pages = process.env["GITHUB_PAGES"] === "true";
-const pagesBase = process.env["PAGES_BASE"] ?? "/printvibe-landing/";
+const pagesBase = process.env["PAGES_BASE"] ?? "/";
 
 /** Emits sw.js with every build file listed, so the site keeps working offline after one visit. */
 function serviceWorker(): Plugin {

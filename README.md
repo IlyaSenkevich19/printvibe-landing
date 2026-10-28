@@ -2,9 +2,9 @@
 
 Лендинг салона печати PrintVibe в Гомеле: футболки, худи, кружки и печать фото.
 
-Сайт в интернете (превью без своего домена): https://ilyasenkevich19.github.io/printvibe-landing/
+Сайт в интернете: https://printvibe.by/
 
-Как перенести сайт на свой домен printvibe.by: [docs/DOMAIN.md](docs/DOMAIN.md).
+После пуша в `main` GitHub сам собирает сайт и заливает его на hoster.by. Как один раз настроить доступы FTP: [docs/DOMAIN.md](docs/DOMAIN.md).
 
 ## Как запустить сайт у себя на компьютере
 
