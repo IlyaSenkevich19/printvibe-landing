@@ -12,7 +12,7 @@ export const business = {
     unp: "490575353",
   },
   phone: { display: "+375 25 783-86-28", href: "tel:+375257838628", e164: "+375257838628" },
-  telegram: { handle: "@ilw_dtl", url: "https://t.me/ilw_dtl" },
+  telegram: { handle: "@PrintVibeBy", url: "https://t.me/PrintVibeBy" },
   instagram: { handle: "@printvibe.by", url: "https://www.instagram.com/printvibe.by/" },
   email: { address: "printvibe.by@gmail.com", href: "mailto:printvibe.by@gmail.com" },
   address: {
