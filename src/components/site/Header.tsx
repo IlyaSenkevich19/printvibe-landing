@@ -1,7 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { business } from "@/content/business";
 import { Logo } from "./Logo";
-import { PhoneIcon, TelegramIcon } from "./icons";
 
 const base = import.meta.env.BASE_URL;
 
@@ -41,34 +39,6 @@ export function Header() {
             ))}
           </ul>
         </nav>
-
-        <div className="flex shrink-0 items-center gap-4 xl:gap-5">
-          <a
-            href={business.phone.href}
-            className="hidden items-center gap-2 font-semibold whitespace-nowrap md:inline-flex"
-          >
-            <PhoneIcon className="size-4" />
-            {business.phone.display}
-          </a>
-          <a
-            href={business.telegram.url}
-            target="_blank"
-            rel="noopener"
-            aria-label="Написать в Telegram"
-            className="btn btn-primary btn-compact hidden whitespace-nowrap md:inline-flex"
-          >
-            <TelegramIcon />
-            <span className="lg:hidden xl:inline">Написать в Telegram</span>
-            <span className="hidden lg:inline xl:hidden">Telegram</span>
-          </a>
-          <a
-            href={business.phone.href}
-            aria-label={`Позвонить: ${business.phone.display}`}
-            className="grid size-11 place-items-center border-2 border-ink bg-card md:hidden"
-          >
-            <PhoneIcon />
-          </a>
-        </div>
       </div>
     </header>
   );
