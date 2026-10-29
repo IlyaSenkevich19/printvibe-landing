@@ -54,8 +54,13 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
-          # Empty password after the comma → lftp reads LFTP_PASSWORD (handles special chars).
-          export LFTP_PASSWORD="$FTP_PASSWORD"
+          umask 077
+          # netrc keeps special characters in the password out of the lftp command line.
+          {
+            printf 'machine %s\n' "$FTP_SERVER"
+            printf 'login %s\n' "$FTP_USERNAME"
+            printf 'password %s\n' "$FTP_PASSWORD"
+          } > "$HOME/.netrc"
           lftp -c "
             set cmd:fail-exit true
             set ftp:passive-mode true
@@ -65,7 +70,8 @@ jobs:
             set net:reconnect-interval-multiplier 1
             set net:timeout 30
             set mirror:parallel-transfer-count 1
-            open -u ${FTP_USERNAME}, ftp://${FTP_SERVER}
-            mirror -R --verbose --only-newer --no-perms --exclude-glob .ftp-deploy-sync-state.json dist/client/ ./
+            open ftp://${FTP_SERVER}
+            mirror -R --verbose --no-perms --exclude-glob .ftp-deploy-sync-state.json dist/client/ ./
             bye
           "
+          rm -f "$HOME/.netrc"
