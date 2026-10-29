@@ -44,18 +44,28 @@ jobs:
           PAGES_BASE: /
       - name: Page for unknown paths
         run: sed "s#%BASE%#/#g" static/404.html > dist/client/404.html
+      # Shared hoster.by FTP often drops the SamKirkland data socket from Actions.
+      # lftp + passive mode + retries is more reliable for this host.
       - name: Upload to hoster.by
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
-          port: 21
-          local-dir: ./dist/client/
-          server-dir: ./
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/.ftp-deploy-sync-state.json
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          # Empty password after the comma → lftp reads LFTP_PASSWORD (handles special chars).
+          export LFTP_PASSWORD="$FTP_PASSWORD"
+          lftp -c "
+            set cmd:fail-exit true
+            set ftp:passive-mode true
+            set ftp:ssl-allow no
+            set net:max-retries 8
+            set net:reconnect-interval-base 5
+            set net:reconnect-interval-multiplier 1
+            set net:timeout 30
+            set mirror:parallel-transfer-count 1
+            open -u ${FTP_USERNAME}, ftp://${FTP_SERVER}
+            mirror -R --verbose --only-newer --no-perms --exclude-glob .ftp-deploy-sync-state.json dist/client/ ./
+            bye
+          "
