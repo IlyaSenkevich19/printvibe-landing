@@ -15,7 +15,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,34 +44,37 @@ jobs:
           PAGES_BASE: /
       - name: Page for unknown paths
         run: sed "s#%BASE%#/#g" static/404.html > dist/client/404.html
-      # Shared hoster.by FTP often drops the SamKirkland data socket from Actions.
-      # lftp + passive mode + retries is more reliable for this host.
+      # One curl transfer per file: hoster.by drops long FTP data sockets from Actions.
       - name: Upload to hoster.by
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        working-directory: dist/client
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp
-          umask 077
-          # netrc keeps special characters in the password out of the lftp command line.
-          {
-            printf 'machine %s\n' "$FTP_SERVER"
-            printf 'login %s\n' "$FTP_USERNAME"
-            printf 'password %s\n' "$FTP_PASSWORD"
-          } > "$HOME/.netrc"
-          lftp -c "
-            set cmd:fail-exit true
-            set ftp:passive-mode true
-            set ftp:ssl-allow no
-            set net:max-retries 8
-            set net:reconnect-interval-base 5
-            set net:reconnect-interval-multiplier 1
-            set net:timeout 30
-            set mirror:parallel-transfer-count 1
-            open ftp://${FTP_SERVER}
-            mirror -R --verbose --no-perms --exclude-glob .ftp-deploy-sync-state.json dist/client/ ./
-            bye
-          "
-          rm -f "$HOME/.netrc"
+          set -euo pipefail
+          mapfile -t files < <(find . -type f | sed 's|^\./||' | sort)
+          echo "Uploading ${#files[@]} files to ${FTP_SERVER}"
+          for rel in "${files[@]}"; do
+            echo "→ ${rel}"
+            for attempt in 1 2 3 4 5; do
+              if curl --silent --show-error --fail \
+                --connect-timeout 30 \
+                --retry 2 \
+                --retry-delay 2 \
+                --ftp-pasv \
+                --ftp-create-dirs \
+                -u "${FTP_USERNAME}:${FTP_PASSWORD}" \
+                -T "${rel}" \
+                "ftp://${FTP_SERVER}/${rel}"; then
+                break
+              fi
+              if [ "$attempt" -eq 5 ]; then
+                echo "Failed to upload ${rel} after ${attempt} attempts" >&2
+                exit 1
+              fi
+              echo "retry ${attempt} for ${rel}"
+              sleep $((attempt * 2))
+            done
+          done
+          echo "Upload finished"
