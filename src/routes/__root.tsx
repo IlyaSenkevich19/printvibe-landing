@@ -93,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // Google Search Console domain verification (same token as the DNS TXT method).
       {
         name: "google-site-verification",
-        content: "ktmOWC1_ixlFC4xNd_EQjrcNdMwBC7lGecC-jN3aySg",
+        content: "3fGYurk0lMPBW7GZKYHpmiIzXNYVRkYRXPkOko3Yub8",
       },
     ],
     links: [
