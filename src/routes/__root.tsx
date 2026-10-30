@@ -4,11 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { ConsentBanner } from "@/components/site/ConsentBanner";
+import { getAnalyticsConsent, hitYandexMetrika } from "@/lib/analytics";
 import { setupOffline } from "@/lib/offline";
 import appCss from "../styles.css?url";
 
@@ -87,6 +90,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "ru_BY" },
       { name: "twitter:card", content: "summary_large_image" },
+      // Google Search Console domain verification (same token as the DNS TXT method).
+      {
+        name: "google-site-verification",
+        content: "ktmOWC1_ixlFC4xNd_EQjrcNdMwBC7lGecC-jN3aySg",
+      },
     ],
     links: [
       {
@@ -130,12 +138,20 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pageUrl = useRouterState({ select: (s) => s.location.href });
+
   useEffect(setupOffline, []);
+
+  useEffect(() => {
+    if (getAnalyticsConsent() !== "accepted") return;
+    hitYandexMetrika(pageUrl);
+  }, [pageUrl]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <ConsentBanner />
     </QueryClientProvider>
   );
 }
